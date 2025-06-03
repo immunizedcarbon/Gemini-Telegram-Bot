@@ -13,7 +13,7 @@ class BotConfig:
         "contact the admin !"
     )
     before_generate_info: str = "🤖Generating🤖"
-    model_1: str = "gemini-2.5-flash-preview-04-17"
+    model_1: str = "gemini-2.5-flash-preview-05-20"
     streaming_update_interval: float = 0.5
 
 

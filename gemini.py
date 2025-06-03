@@ -8,8 +8,9 @@ from md2tgmd import escape
 from telebot import TeleBot
 from config import conf
 from google import genai
+from google.genai import chats
 
-gemini_chat_dict: Dict[str, genai.chat.Chat] = {}
+gemini_chat_dict: Dict[str, chats.AsyncChat] = {}
 
 model_1 = conf.model_1
 error_info = conf.error_info

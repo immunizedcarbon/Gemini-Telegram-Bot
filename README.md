@@ -4,7 +4,7 @@ A Telegram bot that uses Google's Gemini API to chat. The bot supports multi-tur
 
 ## Features
 
-- **Chat model**: `gemini-2.5-flash-preview-04-17`.
+- **Chat model**: `gemini-2.5-flash-preview-05-20`.
 - **Streaming replies** so users see partial answers as they arrive.
 - **Multi-turn conversations** tracked per user.
 - Works in **private chats** or **groups**.
