@@ -5,6 +5,7 @@ A Telegram Bot using Gemini API
 
 # How to Install
 ## (1) On Linux
+0. Ensure Python 3.12 or later is installed
 1. Install dependencies
 ```
 pip install -r requirements.txt
