@@ -15,7 +15,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 
 - Raspberry Pi mit aktuellem Raspberry Pi OS oder vergleichbarer Linux‑
   Distribution
-- Python **3.12** oder neuer
+- Python **3.12.10** oder neuer (empfohlen)
 - Ein Telegram‑Bot‑Token von [BotFather](https://t.me/BotFather)
 - Ein Gemini‑API‑Key aus [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Git zum Klonen des Projekts
