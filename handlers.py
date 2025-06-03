@@ -103,7 +103,7 @@ async def gemini_photo_handler(message: Message, bot: TeleBot) -> None:
 
 async def gemini_edit_handler(message: Message, bot: TeleBot) -> None:
     if not message.photo:
-        await bot.reply_to(message, "pls send a photo")
+        await bot.reply_to(message, "Please send a photo")
         return
     s = message.caption or ""
     try:
