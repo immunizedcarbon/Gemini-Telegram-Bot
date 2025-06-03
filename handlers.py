@@ -2,14 +2,14 @@ from telebot import TeleBot
 from telebot.types import Message
 from md2tgmd import escape
 import traceback
-from config import conf
+from config import BotConfig, conf
 import gemini
 
-error_info              =       conf["error_info"]
-before_generate_info    =       conf["before_generate_info"]
-download_pic_notify     =       conf["download_pic_notify"]
-model_1                 =       conf["model_1"]
-model_2                 =       conf["model_2"]
+error_info = conf.error_info
+before_generate_info = conf.before_generate_info
+download_pic_notify = conf.download_pic_notify
+model_1 = conf.model_1
+model_2 = conf.model_2
 
 gemini_chat_dict        = gemini.gemini_chat_dict
 gemini_pro_chat_dict    = gemini.gemini_pro_chat_dict
@@ -17,12 +17,21 @@ default_model_dict      = gemini.default_model_dict
 gemini_draw_dict        = gemini.gemini_draw_dict
 
 async def start(message: Message, bot: TeleBot) -> None:
+    """Send a greeting to the user."""
+
     try:
-        await bot.reply_to(message , escape("Welcome, you can ask me questions now. \nFor example: `Who is john lennon?`"), parse_mode="MarkdownV2")
+        await bot.reply_to(
+            message,
+            escape(
+                "Welcome, you can ask me questions now. \nFor example: `Who is john lennon?`"
+            ),
+            parse_mode="MarkdownV2",
+        )
     except IndexError:
         await bot.reply_to(message, error_info)
 
 async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
+    """Handle /gemini command using the flash model."""
     try:
         m = message.text.strip().split(maxsplit=1)[1].strip()
     except IndexError:
@@ -31,6 +40,7 @@ async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
     await gemini.gemini_stream(bot, message, m, model_1)
 
 async def gemini_pro_stream_handler(message: Message, bot: TeleBot) -> None:
+    """Handle /gemini_pro command using the pro model."""
     try:
         m = message.text.strip().split(maxsplit=1)[1].strip()
     except IndexError:
@@ -39,6 +49,7 @@ async def gemini_pro_stream_handler(message: Message, bot: TeleBot) -> None:
     await gemini.gemini_stream(bot, message, m, model_2)
 
 async def clear(message: Message, bot: TeleBot) -> None:
+    """Clear conversation history for the user."""
     # Check if the chat is already in gemini_chat_dict.
     if (str(message.from_user.id) in gemini_chat_dict):
         del gemini_chat_dict[str(message.from_user.id)]
@@ -49,6 +60,7 @@ async def clear(message: Message, bot: TeleBot) -> None:
     await bot.reply_to(message, "Your history has been cleared")
 
 async def switch(message: Message, bot: TeleBot) -> None:
+    """Toggle the default model in private chats."""
     if message.chat.type != "private":
         await bot.reply_to( message , "This command is only for private chat !")
         return
@@ -65,6 +77,7 @@ async def switch(message: Message, bot: TeleBot) -> None:
         await bot.reply_to( message , "Now you are using "+model_1)
 
 async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
+    """Handle plain text messages in private chats."""
     m = message.text.strip()
     if str(message.from_user.id) not in default_model_dict:
         default_model_dict[str(message.from_user.id)] = True
@@ -76,6 +89,7 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
             await gemini.gemini_stream(bot,message,m,model_2)
 
 async def gemini_photo_handler(message: Message, bot: TeleBot) -> None:
+    """Handle photos sent to the bot and process them with Gemini."""
     if message.chat.type != "private":
         s = message.caption or ""
         if not s or not (s.startswith("/gemini")):
@@ -102,6 +116,7 @@ async def gemini_photo_handler(message: Message, bot: TeleBot) -> None:
         await gemini.gemini_edit(bot, message, m, photo_file)
 
 async def gemini_edit_handler(message: Message, bot: TeleBot) -> None:
+    """Edit an attached photo using Gemini."""
     if not message.photo:
         await bot.reply_to(message, "Please send a photo")
         return
@@ -112,11 +127,12 @@ async def gemini_edit_handler(message: Message, bot: TeleBot) -> None:
         photo_file = await bot.download_file(file_path.file_path)
     except Exception as e:
         traceback.print_exc()
-        await bot.reply_to(message, e.str())
+        await bot.reply_to(message, str(e))
         return
     await gemini.gemini_edit(bot, message, m, photo_file)
 
 async def draw_handler(message: Message, bot: TeleBot) -> None:
+    """Create an image based on the provided prompt."""
     try:
         m = message.text.strip().split(maxsplit=1)[1].strip()
     except IndexError:

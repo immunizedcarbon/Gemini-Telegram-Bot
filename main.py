@@ -1,26 +1,43 @@
+"""Entry point for the Gemini Telegram bot."""
+
 import argparse
 import asyncio
+import os
 import telebot
 from telebot.async_telebot import AsyncTeleBot
 import handlers
-from config import conf
+from config import BotConfig, conf
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument("tg_token", help="telegram token")
-parser.add_argument("GOOGLE_GEMINI_KEY", help="Google Gemini API key")
+parser.add_argument(
+    "tg_token",
+    nargs="?",
+    default=os.getenv("TELEGRAM_BOT_API_KEY"),
+    help="Telegram token",
+)
+parser.add_argument(
+    "GOOGLE_GEMINI_KEY",
+    nargs="?",
+    default=os.getenv("GOOGLE_GEMINI_KEY") or os.getenv("GEMINI_API_KEYS"),
+    help="Google Gemini API key",
+)
 options = parser.parse_args()
 
 
-async def main():
+async def main() -> None:
+    """Start the bot and register command handlers."""
     # Init bot
+    if not options.tg_token or not options.GOOGLE_GEMINI_KEY:
+        raise SystemExit("API keys must be provided via arguments or environment variables")
+
     bot = AsyncTeleBot(options.tg_token)
     await bot.delete_my_commands(scope=None, language_code=None)
     await bot.set_my_commands(
     commands=[
         telebot.types.BotCommand("start", "Start"),
-        telebot.types.BotCommand("gemini", f"using {conf['model_1']}"),
-        telebot.types.BotCommand("gemini_pro", f"using {conf['model_2']}"),
+        telebot.types.BotCommand("gemini", f"using {conf.model_1}"),
+        telebot.types.BotCommand("gemini_pro", f"using {conf.model_2}"),
         telebot.types.BotCommand("draw", "draw picture"),
         telebot.types.BotCommand("edit", "edit photo"),
         telebot.types.BotCommand("clear", "Clear all history"),

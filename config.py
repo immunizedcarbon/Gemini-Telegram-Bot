@@ -1,13 +1,26 @@
+"""Application configuration and Gemini safety settings."""
+
+from dataclasses import dataclass
 from google.genai import types
-conf = {
-    "error_info":           "⚠️⚠️⚠️\nSomething went wrong !\nplease try to change your prompt or contact the admin !",
-    "before_generate_info": "🤖Generating🤖",
-    "download_pic_notify":  "🤖Loading picture🤖",
-    "model_1":              "gemini-2.5-flash-preview-04-17",
-    "model_2":              "gemini-2.5-pro-preview-05-06",
-    "model_3":              "gemini-2.0-flash-preview-image-generation",#for draw
-    "streaming_update_interval": 0.5,  # Streaming answer update interval (seconds)
-}
+
+
+@dataclass(frozen=True)
+class BotConfig:
+    """Immutable container for runtime configuration."""
+
+    error_info: str = (
+        "⚠️⚠️⚠️\nSomething went wrong !\nPlease try to change your prompt or "
+        "contact the admin !"
+    )
+    before_generate_info: str = "🤖Generating🤖"
+    download_pic_notify: str = "🤖Loading picture🤖"
+    model_1: str = "gemini-2.5-flash-preview-04-17"
+    model_2: str = "gemini-2.5-pro-preview-05-06"
+    model_3: str = "gemini-2.0-flash-preview-image-generation"
+    streaming_update_interval: float = 0.5
+
+
+conf = BotConfig()
 
 safety_settings = [
     types.SafetySetting(
