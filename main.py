@@ -2,11 +2,16 @@
 
 import argparse
 import asyncio
+import logging
 import os
+
+from dotenv import load_dotenv
 import telebot
 from telebot.async_telebot import AsyncTeleBot
+
 import handlers
-from config import BotConfig, conf
+from config import conf
+import gemini
 
 # Init args
 parser = argparse.ArgumentParser()
@@ -24,12 +29,22 @@ parser.add_argument(
 )
 options = parser.parse_args()
 
+load_dotenv()
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 async def main() -> None:
     """Start the bot and register command handlers."""
     # Init bot
     if not options.tg_token or not options.GOOGLE_GEMINI_KEY:
         raise SystemExit("API keys must be provided via arguments or environment variables")
+
+    gemini.init_client(options.GOOGLE_GEMINI_KEY)
 
     bot = AsyncTeleBot(options.tg_token)
     await bot.delete_my_commands(scope=None, language_code=None)
@@ -60,7 +75,7 @@ async def main() -> None:
         pass_bot=True)
 
     # Start bot
-    print("Starting Gemini_Telegram_Bot.")
+    logger.info("Starting Gemini_Telegram_Bot.")
     await bot.polling(none_stop=True)
 
 if __name__ == '__main__':
