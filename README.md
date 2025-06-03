@@ -23,7 +23,7 @@ Required Python packages are listed in [`requirements.txt`](requirements.txt).
    ```bash
    pip install -r requirements.txt
    ```
-2. Run the bot. Tokens can be provided either as command line arguments or via environment variables. A `.env` file can also be used:
+2. Run the bot. Tokens can be provided either as command line arguments or via environment variables. A `.env` file will be loaded automatically if present:
    ```bash
    TELEGRAM_BOT_API_KEY=<telegram token> GEMINI_API_KEYS=<gemini key> python main.py
    ```
