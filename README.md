@@ -1,11 +1,10 @@
 # Gemini Telegram Bot
 
-A Telegram bot that uses Google's Gemini API to chat, generate images and edit pictures. The bot supports multi-turn conversations and streaming responses.
+A Telegram bot that uses Google's Gemini API to chat. The bot supports multi-turn conversations and streaming responses.
 
 ## Features
 
-- **Two chat models**: `gemini-2.5-flash-preview-04-17` and `gemini-2.5-pro-preview-05-06`.
-- **Image generation and editing** using `gemini-2.0-flash-preview-image-generation`.
+- **Chat model**: `gemini-2.5-flash-preview-04-17`.
 - **Streaming replies** so users see partial answers as they arrive.
 - **Multi-turn conversations** tracked per user.
 - Works in **private chats** or **groups**.
@@ -51,13 +50,9 @@ docker run -d --restart=always \
 
 - `/start` – greeting message.
 - `/gemini <text>` – ask using the flash model.
-- `/gemini_pro <text>` – ask using the pro model.
-- `/draw <prompt>` – generate an image.
-- `/edit <instructions>` (with a photo) – edit the attached image.
 - `/clear` – clear conversation history.
-- `/switch` – switch default model in private chat.
 
-In private chats you can also send text directly without a command. Use `/switch` to toggle between the two chat models.
+In private chats you can also send text directly without a command.
 
 ## License
 

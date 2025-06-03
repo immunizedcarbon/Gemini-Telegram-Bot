@@ -13,10 +13,7 @@ class BotConfig:
         "contact the admin !"
     )
     before_generate_info: str = "🤖Generating🤖"
-    download_pic_notify: str = "🤖Loading picture🤖"
     model_1: str = "gemini-2.5-flash-preview-04-17"
-    model_2: str = "gemini-2.5-pro-preview-05-06"
-    model_3: str = "gemini-2.0-flash-preview-image-generation"
     streaming_update_interval: float = 0.5
 
 
@@ -44,8 +41,3 @@ safety_settings = [
         threshold="BLOCK_NONE",
     )
 ]
-
-generation_config = types.GenerateContentConfig(
-    response_modalities=['Text', 'Image'],
-    safety_settings=safety_settings,
-)
