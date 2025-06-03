@@ -1,60 +1,136 @@
 # Gemini Telegram Bot
 
-A Telegram bot that uses Google's Gemini API to chat. The bot supports multi-turn conversations and streaming responses.
+Ein einfach zu installierender Telegram‑Bot für den Raspberry Pi, der über die
+Google‑Gemini‑API Antworten generiert. Der Bot merkt sich pro Benutzer den
+Gesprächsverlauf und zeigt Antworten stückweise an.
 
-## Features
+## Funktionen
 
-- **Chat model**: `gemini-2.5-flash-preview-05-20`.
-- **Streaming replies** so users see partial answers as they arrive.
-- **Multi-turn conversations** tracked per user.
-- Works in **private chats** or **groups**.
+- Chat‑Modell: `gemini-2.5-flash-preview-05-20`
+- Streaming‑Antworten für schnelle Rückmeldungen
+- Mehrere Nachrichten pro Unterhaltung
+- Nutzbar in privaten Chats oder Gruppen
 
-## Requirements
+## Voraussetzungen
 
-- Python 3.12+
-- Telegram bot token ([BotFather](https://t.me/BotFather))
-- Google Gemini API key ([Google AI Studio](https://makersuite.google.com/app/apikey))
+- Raspberry Pi mit aktuellem Raspberry Pi OS oder vergleichbarer Linux‑
+  Distribution
+- Python **3.12** oder neuer
+- Ein Telegram‑Bot‑Token von [BotFather](https://t.me/BotFather)
+- Ein Gemini‑API‑Key aus [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Git zum Klonen des Projekts
 
-Required Python packages are listed in [`requirements.txt`](requirements.txt).
+## Installation Schritt für Schritt
 
-## Running locally
+### 1. System aktualisieren und Pakete installieren
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Run the bot. Tokens can be provided either as command line arguments or via environment variables. A `.env` file will be loaded automatically if present:
-   ```bash
-   TELEGRAM_BOT_API_KEY=<telegram token> GEMINI_API_KEYS=<gemini key> python main.py
-   ```
-   Create a `.env` file if you prefer storing credentials there:
-   ```env
-   TELEGRAM_BOT_API_KEY=<your telegram token>
-   GEMINI_API_KEYS=<your gemini key>
-   ```
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3 python3-venv python3-pip git
+```
 
-## Docker
+### 2. Quellcode herunterladen
 
-A `Dockerfile` is included.
+```bash
+git clone https://github.com/USER/Gemini-Telegram-Bot.git
+cd Gemini-Telegram-Bot
+```
 
-Build and run your own image:
+### 3. Virtuelle Umgebung einrichten
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 4. Python-Abhängigkeiten installieren
+
+```bash
+pip install -r requirements.txt
+```
+
+### 5. Zugriffsdaten hinterlegen
+
+1. Telegram‑Bot bei BotFather erstellen und das Token kopieren.
+2. Gemini‑API‑Key in Google AI Studio erzeugen.
+3. Im Projektverzeichnis eine Datei `.env` mit folgendem Inhalt erstellen:
+
+```env
+TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
+GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
+```
+
+Speichern und die Datei schließen.
+
+### 6. Bot starten
+
+Aktivierte virtuelle Umgebung vorausgesetzt:
+
+```bash
+python main.py
+```
+
+Im Terminal sollte nun `Starting Gemini_Telegram_Bot.` erscheinen. Der Bot ist
+jetzt einsatzbereit.
+
+## Automatischer Start per systemd (optional)
+
+Für einen dauerhaften Betrieb kann ein systemd‑Service eingerichtet werden:
+
+```bash
+sudo nano /etc/systemd/system/gemini-bot.service
+```
+
+Mit folgendem Inhalt (Pfad gegebenenfalls anpassen):
+
+```
+[Unit]
+Description=Gemini Telegram Bot
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/Gemini-Telegram-Bot
+EnvironmentFile=/home/pi/Gemini-Telegram-Bot/.env
+ExecStart=/home/pi/Gemini-Telegram-Bot/venv/bin/python main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Danach:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable gemini-bot.service
+sudo systemctl start gemini-bot.service
+```
+
+Damit läuft der Bot automatisch nach jedem Neustart.
+
+## Docker-Variante
+
+Falls Docker auf dem Raspberry Pi installiert ist, kann der Bot auch als
+Container gestartet werden:
+
 ```bash
 docker build -t gemini-bot .
 docker run -d --restart=always \
-  -e TELEGRAM_BOT_API_KEY=<your telegram token> \
-  -e GEMINI_API_KEYS=<your gemini key> \
+  -e TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN> \
+  -e GEMINI_API_KEYS=<DEIN_GEMINI_KEY> \
   gemini-bot
 ```
 
-## Commands
+## Verwendung
 
-- `/start` – greeting message.
-- `/gemini <text>` – ask using the flash model.
-- `/clear` – clear conversation history.
-- Old chats automatically expire after an hour of inactivity.
+- `/start` – Begrüßung
+- `/gemini <Text>` – Frage an den Bot stellen
+- `/clear` – bisherigen Verlauf löschen
+- Unterhaltungen verfallen nach einer Stunde Inaktivität
 
-In private chats you can also send text directly without a command.
+Im Privatchat können Fragen auch direkt ohne Befehl gesendet werden.
 
-## License
+## Lizenz
 
-This project is licensed under the [Apache 2.0 License](LICENSE).
+Dieses Projekt steht unter der [Apache‑2.0‑Lizenz](LICENSE).
