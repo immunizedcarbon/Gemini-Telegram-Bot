@@ -1,6 +1,6 @@
 """Application configuration and Gemini safety settings."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from google.genai import types
 
@@ -18,6 +18,13 @@ class BotConfig:
     streaming_update_interval: float = 0.5
     # Lifetime of an inactive chat session in seconds
     session_ttl: float = 3600.0
+    # Comma separated list of allowed Telegram user IDs
+    authorized_user_ids: set[int] = field(default_factory=lambda: {
+        int(uid)
+        for uid in os.getenv("AUTHORIZED_USER_IDS", "").split(",")
+        if uid.strip().isdigit()
+    })
+    access_denied_info: str = "❌ Access denied"
 
 
 conf = BotConfig()

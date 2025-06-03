@@ -59,8 +59,9 @@ pip install -r requirements.txt
 TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
 GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
 GEMINI_MODEL=gemini-2.5-flash-preview-05-20
+AUTHORIZED_USER_IDS=12345,67890
 ```
-Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
+`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
 
 ### 6. Bot starten
 
@@ -123,10 +124,14 @@ Ist Docker installiert, lässt sich der Bot auch in einem Container betreiben.
    Zugangsdaten sowie das Modell eintragen:
 
    ```env
-   TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
-   GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
-   GEMINI_MODEL=gemini-2.5-flash-preview-05-20
-   ```
+    TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
+    GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
+    GEMINI_MODEL=gemini-2.5-flash-preview-05-20
+    AUTHORIZED_USER_IDS=12345,67890
+    ```
+    # AUTHORIZED_USER_IDS ist eine kommaseparierte Liste der Telegram-IDs,
+    # die den Bot nutzen dürfen
+
 
 3. Container starten:
 
