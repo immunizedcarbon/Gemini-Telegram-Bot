@@ -52,22 +52,13 @@ async def main() -> None:
     commands=[
         telebot.types.BotCommand("start", "Start"),
         telebot.types.BotCommand("gemini", f"using {conf.model_1}"),
-        telebot.types.BotCommand("gemini_pro", f"using {conf.model_2}"),
-        telebot.types.BotCommand("draw", "draw picture"),
-        telebot.types.BotCommand("edit", "edit photo"),
-        telebot.types.BotCommand("clear", "Clear all history"),
-        telebot.types.BotCommand("switch","switch default model")
+        telebot.types.BotCommand("clear", "Clear all history")
     ],
 )
     # Init commands
     bot.register_message_handler(handlers.start,                         commands=['start'],         pass_bot=True)
     bot.register_message_handler(handlers.gemini_stream_handler,         commands=['gemini'],        pass_bot=True)
-    bot.register_message_handler(handlers.gemini_pro_stream_handler,     commands=['gemini_pro'],    pass_bot=True)
-    bot.register_message_handler(handlers.draw_handler,                  commands=['draw'],          pass_bot=True)
-    bot.register_message_handler(handlers.gemini_edit_handler,           commands=['edit'],          pass_bot=True)
     bot.register_message_handler(handlers.clear,                         commands=['clear'],         pass_bot=True)
-    bot.register_message_handler(handlers.switch,                        commands=['switch'],        pass_bot=True)
-    bot.register_message_handler(handlers.gemini_photo_handler,          content_types=["photo"],    pass_bot=True)
     bot.register_message_handler(
         handlers.gemini_private_handler,
         func=lambda message: message.chat.type == "private",
