@@ -1,11 +1,9 @@
 """Gemini API helpers for streaming, drawing and editing."""
 
 import io
-import os
-import sys
+import logging
 import time
-import traceback
-from typing import Dict
+from typing import Dict, Optional
 
 from PIL import Image
 from telebot.types import Message
@@ -28,8 +26,21 @@ download_pic_notify = conf.download_pic_notify
 
 search_tool = {'google_search': {}}
 
-api_key = os.getenv("GOOGLE_GEMINI_KEY") or os.getenv("GEMINI_API_KEYS") or sys.argv[2]
-client = genai.Client(api_key=api_key)
+logger = logging.getLogger(__name__)
+
+client: Optional[genai.Client] = None
+
+
+def init_client(api_key: str) -> None:
+    """Configure the global Gemini client."""
+    global client
+    client = genai.Client(api_key=api_key)
+
+
+def _ensure_client() -> genai.Client:
+    if client is None:
+        raise RuntimeError("Gemini client not initialized")
+    return client
 
 async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str) -> None:
     """Stream a chat response from Gemini and edit the message as chunks arrive."""
@@ -45,6 +56,7 @@ async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str)
             chat_dict = gemini_pro_chat_dict
 
         if str(message.from_user.id) not in chat_dict:
+            client = _ensure_client()
             chat = client.aio.chats.create(model=model_type, config={'tools': [search_tool]})
             chat_dict[str(message.from_user.id)] = chat
         else:
@@ -79,7 +91,7 @@ async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str)
                                 )
                         else:
                             if "message is not modified" not in str(e).lower():
-                                print(f"Error updating message: {e}")
+                                logger.error("Error updating message: %s", e)
                     last_update = current_time
 
         try:
@@ -98,11 +110,11 @@ async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str)
                         message_id=sent_message.message_id
                     )
             except Exception:
-                traceback.print_exc()
+                logger.exception("Failed to send final message")
 
 
     except Exception as e:
-        traceback.print_exc()
+        logger.exception("Gemini stream failed")
         if sent_message:
             await bot.edit_message_text(
                 f"{error_info}\nError details: {str(e)}",
@@ -117,12 +129,14 @@ async def gemini_edit(bot: TeleBot, message: Message, m: str, photo_file: bytes)
 
     image = Image.open(io.BytesIO(photo_file))
     try:
+        client = _ensure_client()
         response = await client.aio.models.generate_content(
             model=model_3,
             contents=[m, image],
             config=generation_config,
         )
     except Exception as e:
+        logger.exception("Gemini image edit failed")
         await bot.send_message(message.chat.id, str(e))
         return
 
@@ -138,6 +152,7 @@ async def gemini_draw(bot: TeleBot, message: Message, m: str) -> None:
 
     chat_dict = gemini_draw_dict
     if str(message.from_user.id) not in chat_dict:
+        client = _ensure_client()
         chat = client.aio.chats.create(
             model=model_3,
             config=generation_config,
@@ -146,7 +161,12 @@ async def gemini_draw(bot: TeleBot, message: Message, m: str) -> None:
     else:
         chat = chat_dict[str(message.from_user.id)]
 
-    response = await chat.send_message(m)
+    try:
+        response = await chat.send_message(m)
+    except Exception:
+        logger.exception("Gemini image generation failed")
+        await bot.reply_to(message, error_info)
+        return
     for part in response.candidates[0].content.parts:
         if part.text is not None:
             text = part.text
