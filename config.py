@@ -15,6 +15,8 @@ class BotConfig:
     before_generate_info: str = "🤖Generating🤖"
     model_1: str = "gemini-2.5-flash-preview-05-20"
     streaming_update_interval: float = 0.5
+    # Lifetime of an inactive chat session in seconds
+    session_ttl: float = 3600.0
 
 
 conf = BotConfig()
