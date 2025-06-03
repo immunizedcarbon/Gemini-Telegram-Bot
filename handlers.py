@@ -11,7 +11,6 @@ error_info = conf.error_info
 before_generate_info = conf.before_generate_info
 model_1 = conf.model_1
 
-gemini_chat_dict = gemini.gemini_chat_dict
 
 
 async def start(message: Message, bot: TeleBot) -> None:
@@ -47,9 +46,7 @@ async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
 
 async def clear(message: Message, bot: TeleBot) -> None:
     """Clear conversation history for the user."""
-    # Check if the chat is already in gemini_chat_dict.
-    if str(message.from_user.id) in gemini_chat_dict:
-        del gemini_chat_dict[str(message.from_user.id)]
+    gemini.chat_manager.sessions.pop(str(message.from_user.id), None)
     await bot.reply_to(message, "Your history has been cleared")
 
 

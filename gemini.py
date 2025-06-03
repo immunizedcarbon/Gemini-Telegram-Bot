@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import dataclass, field
 from typing import Dict, Optional
 
 from telebot import TeleBot
@@ -14,7 +15,38 @@ from google.genai import chats
 from config import conf
 from utils import safe_edit
 
-gemini_chat_dict: Dict[str, chats.AsyncChat] = {}
+
+@dataclass
+class ChatSession:
+    chat: chats.AsyncChat
+    last_used: float = field(default_factory=time.monotonic)
+
+
+class ChatManager:
+    def __init__(self, ttl: float) -> None:
+        self.ttl = ttl
+        self.sessions: Dict[str, ChatSession] = {}
+
+    def get_chat(self, user_id: str, *, model: str) -> chats.AsyncChat:
+        now = time.monotonic()
+        session = self.sessions.get(user_id)
+        if session is not None:
+            session.last_used = now
+            return session.chat
+
+        client = _ensure_client()
+        chat = client.aio.chats.create(model=model, config={"tools": [search_tool]})
+        self.sessions[user_id] = ChatSession(chat)
+        return chat
+
+    def cleanup(self) -> None:
+        now = time.monotonic()
+        to_remove = [uid for uid, sess in self.sessions.items() if now - sess.last_used > self.ttl]
+        for uid in to_remove:
+            del self.sessions[uid]
+
+
+chat_manager = ChatManager(conf.session_ttl)
 
 model_1 = conf.model_1
 error_info = conf.error_info
@@ -48,14 +80,8 @@ async def gemini_stream(
     try:
         sent_message = await bot.reply_to(message, before_generate_info)
 
-        chat = gemini_chat_dict.get(str(message.from_user.id))
-        if chat is None:
-            client = _ensure_client()
-            chat = client.aio.chats.create(
-                model=model_type,
-                config={"tools": [search_tool]},
-            )
-            gemini_chat_dict[str(message.from_user.id)] = chat
+        chat = chat_manager.get_chat(str(message.from_user.id), model=model_type)
+        chat_manager.cleanup()
 
         response = await chat.send_message_stream(query)
 

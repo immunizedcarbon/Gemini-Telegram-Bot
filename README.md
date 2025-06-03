@@ -51,6 +51,7 @@ docker run -d --restart=always \
 - `/start` – greeting message.
 - `/gemini <text>` – ask using the flash model.
 - `/clear` – clear conversation history.
+- Old chats automatically expire after an hour of inactivity.
 
 In private chats you can also send text directly without a command.
 
