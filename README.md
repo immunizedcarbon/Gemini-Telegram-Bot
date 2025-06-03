@@ -6,6 +6,7 @@
 Google已停止gemini-2.5-pro模型的免费计划，所以免费用户无法使用该模型
 # 如何安装
 ## (1) Linux系统
+0. 确保已安装 Python 3.12 或更高版本
 1. 安装依赖
 ```
 pip install -r requirements.txt
