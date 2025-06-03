@@ -6,3 +6,4 @@ services:
     environment:
       TELEGRAM_BOT_API_KEY: ${TELEGRAM_BOT_API_KEY}
       GEMINI_API_KEYS: ${GEMINI_API_KEYS}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-preview-05-20}
