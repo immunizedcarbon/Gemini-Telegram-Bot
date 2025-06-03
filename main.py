@@ -1,18 +1,15 @@
 import argparse
-import traceback
 import asyncio
-import re
 import telebot
 from telebot.async_telebot import AsyncTeleBot
 import handlers
-from config import conf, generation_config, safety_settings
+from config import conf
 
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument("tg_token", help="telegram token")
 parser.add_argument("GOOGLE_GEMINI_KEY", help="Google Gemini API key")
 options = parser.parse_args()
-print("Arg parse done.")
 
 
 async def main():
@@ -30,8 +27,6 @@ async def main():
         telebot.types.BotCommand("switch","switch default model")
     ],
 )
-    print("Bot init done.")
-
     # Init commands
     bot.register_message_handler(handlers.start,                         commands=['start'],         pass_bot=True)
     bot.register_message_handler(handlers.gemini_stream_handler,         commands=['gemini'],        pass_bot=True)
