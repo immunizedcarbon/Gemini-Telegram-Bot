@@ -32,7 +32,7 @@ sudo apt install -y python3 python3-venv python3-pip git
 ### 2. Quellcode herunterladen
 
 ```bash
-git clone https://github.com/USER/Gemini-Telegram-Bot.git
+git clone https://github.com/immunizedcarbon/Gemini-Telegram-Bot.git
 cd Gemini-Telegram-Bot
 ```
 
