@@ -111,16 +111,31 @@ Damit läuft der Bot automatisch nach jedem Neustart.
 
 ## Docker-Variante
 
-Falls Docker auf dem Raspberry Pi installiert ist, kann der Bot auch als
-Container gestartet werden:
+Ist Docker installiert, kann der Bot bequem in einem Container laufen.
 
 ```bash
 docker build -t gemini-bot .
-docker run -d --restart=always \
+docker run -d --restart=unless-stopped \
   -e TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN> \
   -e GEMINI_API_KEYS=<DEIN_GEMINI_KEY> \
   gemini-bot
 ```
+
+Optional bietet sich Docker Compose an. Beispiel `docker-compose.yml`:
+
+```yaml
+version: "3.8"
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    environment:
+      TELEGRAM_BOT_API_KEY: "${TELEGRAM_BOT_API_KEY}"
+      GEMINI_API_KEYS: "${GEMINI_API_KEYS}"
+```
+
+API-Schlüssel können in einer `.env`‑Datei stehen und mit
+`docker compose up -d` gestartet werden.
 
 ## Verwendung
 

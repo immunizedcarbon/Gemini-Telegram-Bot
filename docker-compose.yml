@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    environment:
+      TELEGRAM_BOT_API_KEY: ${TELEGRAM_BOT_API_KEY}
+      GEMINI_API_KEYS: ${GEMINI_API_KEYS}
