@@ -1,14 +1,18 @@
 """Gemini API helpers for streaming chat responses."""
 
+from __future__ import annotations
+
 import logging
 import time
 from typing import Dict, Optional
-from telebot.types import Message
-from md2tgmd import escape
+
 from telebot import TeleBot
-from config import conf
+from telebot.types import Message
 from google import genai
 from google.genai import chats
+
+from config import conf
+from utils import safe_edit
 
 gemini_chat_dict: Dict[str, chats.AsyncChat] = {}
 
@@ -16,7 +20,7 @@ model_1 = conf.model_1
 error_info = conf.error_info
 before_generate_info = conf.before_generate_info
 
-search_tool = {'google_search': {}}
+search_tool = {"google_search": {}}
 
 logger = logging.getLogger(__name__)
 
@@ -34,82 +38,48 @@ def _ensure_client() -> genai.Client:
         raise RuntimeError("Gemini client not initialized")
     return client
 
-async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str) -> None:
+
+async def gemini_stream(
+    bot: TeleBot, message: Message, query: str, model_type: str
+) -> None:
     """Stream a chat response from Gemini and edit the message as chunks arrive."""
 
-    sent_message = None
+    sent_message: Message | None = None
     try:
-        sent_message = await bot.reply_to(message, "🤖 Generating answers...")
+        sent_message = await bot.reply_to(message, before_generate_info)
 
-        chat = None
-        chat_dict = gemini_chat_dict
-
-        if str(message.from_user.id) not in chat_dict:
+        chat = gemini_chat_dict.get(str(message.from_user.id))
+        if chat is None:
             client = _ensure_client()
-            chat = client.aio.chats.create(model=model_type, config={'tools': [search_tool]})
-            chat_dict[str(message.from_user.id)] = chat
-        else:
-            chat = chat_dict[str(message.from_user.id)]
+            chat = client.aio.chats.create(
+                model=model_type,
+                config={"tools": [search_tool]},
+            )
+            gemini_chat_dict[str(message.from_user.id)] = chat
 
-        response = await chat.send_message_stream(m)
+        response = await chat.send_message_stream(query)
 
         full_response = ""
-        last_update = time.time()
+        last_update = time.monotonic()
         update_interval = conf.streaming_update_interval
 
         async for chunk in response:
-            if hasattr(chunk, 'text') and chunk.text:
+            if getattr(chunk, "text", ""):
                 full_response += chunk.text
-                current_time = time.time()
+                if time.monotonic() - last_update >= update_interval:
+                    await safe_edit(bot, sent_message, full_response)
+                    last_update = time.monotonic()
 
-                if current_time - last_update >= update_interval:
+        await safe_edit(bot, sent_message, full_response)
 
-                    try:
-                        await bot.edit_message_text(
-                            escape(full_response),
-                            chat_id=sent_message.chat.id,
-                            message_id=sent_message.message_id,
-                            parse_mode="MarkdownV2"
-                            )
-                    except Exception as e:
-                        if "parse markdown" in str(e).lower():
-                            await bot.edit_message_text(
-                                full_response,
-                                chat_id=sent_message.chat.id,
-                                message_id=sent_message.message_id
-                                )
-                        else:
-                            if "message is not modified" not in str(e).lower():
-                                logger.error("Error updating message: %s", e)
-                    last_update = current_time
-
-        try:
-            await bot.edit_message_text(
-                escape(full_response),
-                chat_id=sent_message.chat.id,
-                message_id=sent_message.message_id,
-                parse_mode="MarkdownV2"
-            )
-        except Exception as e:
-            try:
-                if "parse markdown" in str(e).lower():
-                    await bot.edit_message_text(
-                        full_response,
-                        chat_id=sent_message.chat.id,
-                        message_id=sent_message.message_id
-                    )
-            except Exception:
-                logger.exception("Failed to send final message")
-
-
-    except Exception as e:
+    except Exception as exc:  # pragma: no cover - network issues
         logger.exception("Gemini stream failed")
         if sent_message:
-            await bot.edit_message_text(
-                f"{error_info}\nError details: {str(e)}",
-                chat_id=sent_message.chat.id,
-                message_id=sent_message.message_id,
+            await safe_edit(
+                bot,
+                sent_message,
+                f"{error_info}\nError details: {exc}",
+                parse_markdown=False,
             )
         else:
-            await bot.reply_to(message, f"{error_info}\nError details: {str(e)}")
-
+            await bot.reply_to(message, f"{error_info}\nError details: {exc}")
