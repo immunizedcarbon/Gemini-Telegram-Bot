@@ -1,6 +1,7 @@
 """Application configuration and Gemini safety settings."""
 
 from dataclasses import dataclass
+import os
 from google.genai import types
 
 
@@ -13,7 +14,7 @@ class BotConfig:
         "contact the admin !"
     )
     before_generate_info: str = "🤖Generating🤖"
-    model_1: str = "gemini-2.5-flash-preview-05-20"
+    model_1: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
     streaming_update_interval: float = 0.5
     # Lifetime of an inactive chat session in seconds
     session_ttl: float = 3600.0
