@@ -1,31 +1,39 @@
+"""Gemini API helpers for streaming, drawing and editing."""
+
 import io
+import os
+import sys
 import time
 import traceback
-import sys
+from typing import Dict
+
 from PIL import Image
 from telebot.types import Message
 from md2tgmd import escape
 from telebot import TeleBot
-from config import conf, generation_config
+from config import BotConfig, conf, generation_config
 from google import genai
 
-gemini_draw_dict = {}
-gemini_chat_dict = {}
-gemini_pro_chat_dict = {}
-default_model_dict = {}
+gemini_draw_dict: Dict[str, genai.chat.Chat] = {}
+gemini_chat_dict: Dict[str, genai.chat.Chat] = {}
+gemini_pro_chat_dict: Dict[str, genai.chat.Chat] = {}
+default_model_dict: Dict[str, bool] = {}
 
-model_1                 =       conf["model_1"]
-model_2                 =       conf["model_2"]
-model_3                 =       conf["model_3"]
-error_info              =       conf["error_info"]
-before_generate_info    =       conf["before_generate_info"]
-download_pic_notify     =       conf["download_pic_notify"]
+model_1 = conf.model_1
+model_2 = conf.model_2
+model_3 = conf.model_3
+error_info = conf.error_info
+before_generate_info = conf.before_generate_info
+download_pic_notify = conf.download_pic_notify
 
 search_tool = {'google_search': {}}
 
-client = genai.Client(api_key=sys.argv[2])
+api_key = os.getenv("GOOGLE_GEMINI_KEY") or os.getenv("GEMINI_API_KEYS") or sys.argv[2]
+client = genai.Client(api_key=api_key)
 
-async def gemini_stream(bot:TeleBot, message:Message, m:str, model_type:str):
+async def gemini_stream(bot: TeleBot, message: Message, m: str, model_type: str) -> None:
+    """Stream a chat response from Gemini and edit the message as chunks arrive."""
+
     sent_message = None
     try:
         sent_message = await bot.reply_to(message, "🤖 Generating answers...")
@@ -46,7 +54,7 @@ async def gemini_stream(bot:TeleBot, message:Message, m:str, model_type:str):
 
         full_response = ""
         last_update = time.time()
-        update_interval = conf["streaming_update_interval"]
+        update_interval = conf.streaming_update_interval
 
         async for chunk in response:
             if hasattr(chunk, 'text') and chunk.text:
@@ -99,22 +107,25 @@ async def gemini_stream(bot:TeleBot, message:Message, m:str, model_type:str):
             await bot.edit_message_text(
                 f"{error_info}\nError details: {str(e)}",
                 chat_id=sent_message.chat.id,
-                message_id=sent_message.message_id
+                message_id=sent_message.message_id,
             )
         else:
             await bot.reply_to(message, f"{error_info}\nError details: {str(e)}")
 
-async def gemini_edit(bot: TeleBot, message: Message, m: str, photo_file: bytes):
+async def gemini_edit(bot: TeleBot, message: Message, m: str, photo_file: bytes) -> None:
+    """Edit an image using Gemini."""
 
     image = Image.open(io.BytesIO(photo_file))
     try:
         response = await client.aio.models.generate_content(
-        model=model_3,
-        contents=[m, image],
-        config=generation_config
-    )
+            model=model_3,
+            contents=[m, image],
+            config=generation_config,
+        )
     except Exception as e:
-        await bot.send_message(message.chat.id, e.str())
+        await bot.send_message(message.chat.id, str(e))
+        return
+
     for part in response.candidates[0].content.parts:
         if part.text is not None:
             await bot.send_message(message.chat.id, escape(part.text), parse_mode="MarkdownV2")
@@ -122,7 +133,9 @@ async def gemini_edit(bot: TeleBot, message: Message, m: str, photo_file: bytes)
             photo = part.inline_data.data
             await bot.send_photo(message.chat.id, photo)
 
-async def gemini_draw(bot:TeleBot, message:Message, m:str):
+async def gemini_draw(bot: TeleBot, message: Message, m: str) -> None:
+    """Generate an image with Gemini and send it back."""
+
     chat_dict = gemini_draw_dict
     if str(message.from_user.id) not in chat_dict:
         chat = client.aio.chats.create(
