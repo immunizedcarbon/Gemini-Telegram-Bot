@@ -167,13 +167,11 @@ und den Container beziehungsweise das Programm neu zu starten.
 
 ## Verwendung
 
-- `/start` – Begrüßung
-- `/gemini <Text>` – Frage an den Bot stellen
 - `/clear` – bisherigen Verlauf löschen
 - Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
   neu gestartet wird
 
-Im Privatchat können Fragen auch direkt ohne Befehl gesendet werden.
+Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
 
 ## Lizenz
 

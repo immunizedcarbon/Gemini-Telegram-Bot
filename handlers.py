@@ -24,21 +24,6 @@ async def _check_authorized(message: Message, bot: TeleBot) -> bool:
 
 
 
-async def start(message: Message, bot: TeleBot) -> None:
-    """Send a greeting to the user."""
-    if not await _check_authorized(message, bot):
-        return
-
-    try:
-        await bot.reply_to(
-            message,
-            escape(
-                "Welcome, you can ask me questions now. \nFor example: `Who is john lennon?`"
-            ),
-            parse_mode="MarkdownV2",
-        )
-    except IndexError:
-        await bot.reply_to(message, error_info)
 
 
 async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
@@ -50,9 +35,7 @@ async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
     except IndexError:
         await bot.reply_to(
             message,
-            escape(
-                "Please add what you want to say after /gemini. \nFor example: `/gemini Who is john lennon?`"
-            ),
+            escape("Please add what you want to say after /gemini."),
             parse_mode="MarkdownV2",
         )
         return
