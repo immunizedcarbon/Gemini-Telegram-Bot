@@ -170,12 +170,14 @@ async def gemini_stream(
     """
 
     sent_message: Message | None = None
+    last_action = time.monotonic()
     try:
         sent_message = await bot.reply_to(
             message,
             before_generate_info,
         )
-
+        await bot.send_chat_action(message.chat.id, "typing")
+        
         chat = chat_manager.get_chat(str(message.from_user.id), model=model_type)
         chat_manager.cleanup()
 
@@ -221,6 +223,9 @@ async def gemini_stream(
                 ):
                     await safe_edit(bot, sent_message, full_response)
                     last_update = time.monotonic()
+            if time.monotonic() - last_action >= 4:
+                await bot.send_chat_action(message.chat.id, "typing")
+                last_action = time.monotonic()
             if chunk.candidates:
                 last_candidate = chunk.candidates[0]
             if chunk.usage_metadata and chunk.usage_metadata.total_token_count:
