@@ -1,8 +1,6 @@
 """Access helpers for the Bundestag DIP API."""
 
 from __future__ import annotations
-
-import asyncio
 import logging
 from typing import Any, Dict
 from urllib.parse import urlencode
