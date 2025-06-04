@@ -140,55 +140,57 @@ Damit läuft der Bot automatisch nach jedem Neustart.
 
 ## Docker-Variante
 
-Ist Docker installiert, lässt sich der Bot auch in einem Container betreiben.
+Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
 
-1. Image bauen:
+1. **Image erstellen**
 
    ```bash
    docker build -t gemini-bot .
    ```
 
-2. Eine `.env`‑Datei für Docker erstellen (z.B. im selben Ordner) und die
-   Zugangsdaten sowie das Modell eintragen:
+2. **Umgebungsvariablen definieren**
+
+   Lege eine Datei `.env` im Projektordner an und trage dort die
+   Zugangsdaten und optionalen Einstellungen ein:
 
    ```env
-    TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
-    GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
+   TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
+   GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
    GEMINI_MODEL=gemini-2.5-flash-preview-05-20
    AUTHORIZED_USER_IDS=12345,67890
-    # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
-    SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
-    ```
-    # AUTHORIZED_USER_IDS ist eine kommaseparierte Liste der Telegram-IDs,
-    # die den Bot nutzen dürfen
-    # SYSTEM_INSTRUCTION legt die Systemvorgaben fest und kann ausgelassen werden
+   # optional
+   SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
+   ```
 
+   `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs,
+   die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` kann weggelassen werden.
 
-3. Container starten:
+3. **Container starten**
 
    ```bash
    docker run -d --restart=unless-stopped \
      --env-file .env \
+     --name gemini-bot \
      gemini-bot
    ```
 
-Alternativ kann Docker Compose verwendet werden. Beispiel `docker-compose.yml`:
+   Alternativ lässt sich Docker Compose nutzen. Beispiel `docker-compose.yml`:
 
-```yaml
-version: "3.8"
-services:
-  bot:
-    build: .
-    restart: unless-stopped
-    environment:
-      TELEGRAM_BOT_API_KEY: "${TELEGRAM_BOT_API_KEY}"
-      GEMINI_API_KEYS: "${GEMINI_API_KEYS}"
-      GEMINI_MODEL: "${GEMINI_MODEL}"
-      # optional
-      SYSTEM_INSTRUCTION: "${SYSTEM_INSTRUCTION}"
-```
+   ```yaml
+   version: "3.8"
+   services:
+     bot:
+       build: .
+       restart: unless-stopped
+       env_file: .env
+   ```
 
-Mit `docker compose up -d` wird der Bot anschließend im Hintergrund gestartet.
+   Anschließend startet der Bot mit:
+
+   ```bash
+   docker compose up -d
+   ```
+
 
 ## Modell aktualisieren
 
