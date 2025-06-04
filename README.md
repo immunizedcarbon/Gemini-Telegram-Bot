@@ -74,7 +74,7 @@ pip install -r requirements.txt
 
 ```env
 TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
-GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
+GEMINI_API_KEY=<DEIN_GEMINI_KEY>
 GEMINI_MODEL=gemini-2.5-flash-preview-05-20
 AUTHORIZED_USER_IDS=12345,67890
 # Optional limits for the free tier (defaults passend zum Modell)
@@ -155,7 +155,7 @@ Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
 
    ```env
    TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
-   GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
+   GEMINI_API_KEY=<DEIN_GEMINI_KEY>
    GEMINI_MODEL=gemini-2.5-flash-preview-05-20
    AUTHORIZED_USER_IDS=12345,67890
    # optional
