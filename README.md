@@ -201,6 +201,19 @@ YouTube-Links funktionieren ähnlich: Link schicken und die Frage entweder
 nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` steht
 weiterhin zur Verfügung.
 
+### Hinweis zur Textformatierung
+
+Telegram unterstützt nur eine eingeschränkte Form von Markdown. Um Fehler
+bei der Darstellung zu vermeiden, kann über die Umgebungsvariable
+`SYSTEM_INSTRUCTION` festgelegt werden, dass das Modell seine Antworten bereits
+im passenden *MarkdownV2*-Format liefert. Ein Beispiel für die `.env`-Datei:
+
+```env
+SYSTEM_INSTRUCTION="Antworte immer in korrektem MarkdownV2 und entkomme alle Sonderzeichen, die Telegram benötigt."
+```
+
+Damit sind keine zusätzlichen Skripte nötig, um längere Texte sicher zu übermitteln.
+
 ## Lizenz
 
 Dieses Projekt steht unter der [Apache‑2.0‑Lizenz](LICENSE).
