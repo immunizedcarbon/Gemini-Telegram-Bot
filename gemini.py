@@ -214,14 +214,27 @@ async def gemini_stream(
         last_candidate: types.Candidate | None = None
         usage_tokens: int | None = None
 
+        messages = [sent_message]
+        buffers = [""]
+
         async for chunk in response:
             if getattr(chunk, "text", ""):
                 full_response += chunk.text
-                if (
-                    len(full_response) <= MAX_MESSAGE_LENGTH
-                    and time.monotonic() - last_update >= update_interval
-                ):
-                    await safe_edit(bot, sent_message, full_response)
+                buffers[-1] += chunk.text
+                while len(buffers[-1]) > MAX_MESSAGE_LENGTH:
+                    part = buffers[-1][:MAX_MESSAGE_LENGTH]
+                    leftover = buffers[-1][MAX_MESSAGE_LENGTH:]
+                    await safe_edit(bot, messages[-1], part)
+                    buffers[-1] = part
+                    new_msg = await bot.send_message(
+                        sent_message.chat.id,
+                        escape(leftover) if leftover else "\u200b",
+                        parse_mode="MarkdownV2",
+                    )
+                    messages.append(new_msg)
+                    buffers.append(leftover)
+                if time.monotonic() - last_update >= update_interval:
+                    await safe_edit(bot, messages[-1], buffers[-1])
                     last_update = time.monotonic()
             if time.monotonic() - last_action >= 4:
                 await bot.send_chat_action(message.chat.id, "typing")
@@ -237,19 +250,28 @@ async def gemini_stream(
             final_text += "\n\n" + sources
 
         chunks = split_text(final_text)
-        await safe_edit(
-            bot,
-            sent_message,
-            chunks[0],
-            markdown=True,
-            escape_text=False,
-        )
-        for chunk in chunks[1:]:
-            await bot.send_message(
-                sent_message.chat.id,
-                chunk,
-                parse_mode="MarkdownV2",
-            )
+        for i, chunk in enumerate(chunks):
+            if i < len(messages):
+                await safe_edit(
+                    bot,
+                    messages[i],
+                    chunk,
+                    markdown=True,
+                    escape_text=False,
+                )
+            else:
+                msg = await bot.send_message(
+                    sent_message.chat.id,
+                    chunk,
+                    parse_mode="MarkdownV2",
+                )
+                messages.append(msg)
+        # remove any extra placeholder messages created during streaming
+        for msg in messages[len(chunks):]:
+            try:
+                await bot.delete_message(msg.chat.id, msg.message_id)
+            except Exception:
+                pass
 
         if usage_tokens is not None:
             rate_limiter.record(usage_tokens)
