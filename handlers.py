@@ -30,9 +30,6 @@ async def _check_authorized(message: Message, bot: TeleBot) -> bool:
     return False
 
 
-
-
-
 async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
     """Handle /gemini command using the flash model."""
     if not await _check_authorized(message, bot):
@@ -96,7 +93,7 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
     match = YOUTUBE_RE.search(m)
     if match:
         url = match.group(0)
-        prompt = (m[: match.start()] + m[match.end() :]).strip()
+        prompt = (m[:match.start()] + m[match.end():]).strip()
         if not prompt:
             pending_youtube[message.from_user.id] = url
             await bot.reply_to(message, "What would you like to do with this video?")

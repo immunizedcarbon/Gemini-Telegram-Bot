@@ -25,6 +25,7 @@ def split_text(text: str, max_length: int = MAX_MESSAGE_LENGTH) -> list[str]:
     chunks.append(text)
     return chunks
 
+
 logger = logging.getLogger(__name__)
 
 
