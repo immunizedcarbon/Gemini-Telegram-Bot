@@ -12,10 +12,11 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
   neu gestartet wird
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift
-  gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
+-  gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
   Antwort ausgegeben.
-- YouTube-Videos analysieren: Link mit /youtube und Frage schicken oder erst den
-  Link senden und danach die Frage stellen
+- YouTube-Videos analysieren: Link senden und die Frage entweder in einer
+  separaten Nachricht oder direkt zusammen mit dem Link stellen. Der Befehl
+  `/youtube` ist weiterhin nutzbar, erscheint aber nicht im Menü.
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
@@ -196,8 +197,9 @@ und den Container beziehungsweise das Programm neu zu starten.
 Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
 Fotos oder Bilddateien können ebenfalls geschickt werden. Eine angefügte
 Beschriftung dient dabei als Prompt für Gemini.
-YouTube-Links funktionieren ähnlich: einfach den Link senden, dann eine Frage
-nachschieben, oder den Befehl `/youtube` mit Link und Frage nutzen.
+YouTube-Links funktionieren ähnlich: Link schicken und die Frage entweder
+nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` steht
+weiterhin zur Verfügung.
 
 ## Lizenz
 
