@@ -80,6 +80,8 @@ AUTHORIZED_USER_IDS=12345,67890
 # Optional limits for the free tier (defaults passend zum Modell)
 GEMINI_RPM_LIMIT=10
 GEMINI_TPM_LIMIT=250000
+# Lifetime of inactive sessions in seconds (0 = unlimited)
+SESSION_TTL=0
 # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
 SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
 ```
@@ -159,6 +161,7 @@ Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
    GEMINI_MODEL=gemini-2.5-flash-preview-05-20
    AUTHORIZED_USER_IDS=12345,67890
    # optional
+   SESSION_TTL=0
    SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
    ```
 
