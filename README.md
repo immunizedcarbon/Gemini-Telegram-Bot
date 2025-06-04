@@ -14,6 +14,8 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift
   gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
   Antwort ausgegeben.
+- YouTube-Videos analysieren: Link mit /youtube und Frage schicken oder erst den
+  Link senden und danach die Frage stellen
 - Nutzbar in privaten Chats oder Gruppen
 
 ## Voraussetzungen
@@ -183,6 +185,8 @@ und den Container beziehungsweise das Programm neu zu starten.
 Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
 Fotos oder Bilddateien können ebenfalls geschickt werden. Eine angefügte
 Beschriftung dient dabei als Prompt für Gemini.
+YouTube-Links funktionieren ähnlich: einfach den Link senden, dann eine Frage
+nachschieben, oder den Befehl `/youtube` mit Link und Frage nutzen.
 
 ## Lizenz
 

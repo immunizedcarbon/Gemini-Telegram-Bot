@@ -58,11 +58,15 @@ async def main() -> None:
     await bot.set_my_commands(
         commands=[
             telebot.types.BotCommand("clear", "Clear all history"),
+            telebot.types.BotCommand("youtube", "Ask about a YouTube video"),
         ],
     )
     # Init commands
     bot.register_message_handler(
         handlers.gemini_stream_handler, commands=["gemini"], pass_bot=True
+    )
+    bot.register_message_handler(
+        handlers.youtube_command_handler, commands=["youtube", "yt"], pass_bot=True
     )
     bot.register_message_handler(handlers.clear, commands=["clear"], pass_bot=True)
     bot.register_message_handler(

@@ -124,3 +124,18 @@ async def gemini_stream(
             )
         else:
             await bot.reply_to(message, f"{error_info}\nError details: {exc}")
+
+
+async def gemini_youtube_stream(
+    bot: TeleBot,
+    message: Message,
+    youtube_url: str,
+    prompt: str,
+    model_type: str,
+) -> None:
+    """Stream a response based on the provided YouTube video and prompt."""
+
+    video_part = types.Part(
+        file_data=types.FileData(file_uri=youtube_url)
+    )
+    await gemini_stream(bot, message, [video_part, prompt], model_type)
