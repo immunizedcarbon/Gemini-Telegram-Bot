@@ -9,12 +9,11 @@ from dotenv import load_dotenv
 import telebot
 from telebot.async_telebot import AsyncTeleBot
 
+import handlers
+import gemini
+
 # Load environment from .env if present
 load_dotenv()
-
-import handlers
-from config import conf
-import gemini
 
 
 def parse_args() -> argparse.Namespace:

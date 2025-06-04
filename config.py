@@ -18,7 +18,9 @@ class BotConfig:
 
     _raw_system_instruction = os.getenv("SYSTEM_INSTRUCTION")
     system_instruction: str | None = (
-        _raw_system_instruction.replace("\\n", "\n") if _raw_system_instruction else None
+        _raw_system_instruction.replace("\\n", "\n")
+        if _raw_system_instruction
+        else None
     )
     streaming_update_interval: float = 0.5
     # Lifetime of an inactive chat session in seconds. Set to 0 for unlimited

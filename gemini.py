@@ -52,7 +52,11 @@ class ChatManager:
         if self.ttl <= 0:
             return
         now = time.monotonic()
-        to_remove = [uid for uid, sess in self.sessions.items() if now - sess.last_used > self.ttl]
+        to_remove = [
+            uid
+            for uid, sess in self.sessions.items()
+            if now - sess.last_used > self.ttl
+        ]
         for uid in to_remove:
             del self.sessions[uid]
 
@@ -167,7 +171,10 @@ async def gemini_stream(
 
     sent_message: Message | None = None
     try:
-        sent_message = await bot.reply_to(message, before_generate_info)
+        sent_message = await bot.reply_to(
+            message,
+            before_generate_info,
+        )
 
         chat = chat_manager.get_chat(str(message.from_user.id), model=model_type)
         chat_manager.cleanup()
@@ -179,7 +186,10 @@ async def gemini_stream(
             model=model_type,
             contents=contents,
         )
-        if tokens.total_tokens and tokens.total_tokens > model_info.input_token_limit:
+        if (
+            tokens.total_tokens
+            and tokens.total_tokens > model_info.input_token_limit
+        ):
             await safe_edit(
                 bot,
                 sent_message,
@@ -187,7 +197,11 @@ async def gemini_stream(
             )
             return
         if not rate_limiter.can_make_request(tokens.total_tokens or 0):
-            await safe_edit(bot, sent_message, "Rate limit reached. Please wait.")
+            await safe_edit(
+                bot,
+                sent_message,
+                "Rate limit reached. Please wait.",
+            )
             return
 
         response = await chat.send_message_stream(query)
