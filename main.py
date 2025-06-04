@@ -58,7 +58,6 @@ async def main() -> None:
     await bot.set_my_commands(
         commands=[
             telebot.types.BotCommand("clear", "Clear all history"),
-            telebot.types.BotCommand("youtube", "Ask about a YouTube video"),
         ],
     )
     # Init commands
