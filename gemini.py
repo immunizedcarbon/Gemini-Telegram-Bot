@@ -40,6 +40,8 @@ class ChatManager:
         return chat
 
     def cleanup(self) -> None:
+        if self.ttl <= 0:
+            return
         now = time.monotonic()
         to_remove = [uid for uid, sess in self.sessions.items() if now - sess.last_used > self.ttl]
         for uid in to_remove:
