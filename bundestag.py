@@ -66,3 +66,47 @@ async def dip_search(resource: str, params: Optional[Dict[str, str]] = None) -> 
     return await search(resource, **(params or {}))
 
 
+# Explicit function declaration objects for registering with Gemini
+dip_fetch_decl = types.FunctionDeclaration(
+    name="dip_fetch",
+    description="Fetch a single item from the Bundestag DIP API by id.",
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "resource": types.Schema(
+                type="STRING",
+                description="Resource name such as 'vorgang' or 'drucksache'.",
+            ),
+            "id": types.Schema(
+                type="STRING",
+                description="Identifier of the item to fetch.",
+            ),
+        },
+        required=["resource", "id"],
+    ),
+)
+
+dip_search_decl = types.FunctionDeclaration(
+    name="dip_search",
+    description="Search the Bundestag DIP API and return matching entities.",
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "resource": types.Schema(
+                type="STRING",
+                description="Resource name to search, e.g. 'vorgang'.",
+            ),
+            "params": types.Schema(
+                type="OBJECT",
+                description="Optional query parameters as defined by the API.",
+                additional_properties=types.Schema(type="STRING"),
+            ),
+        },
+        required=["resource"],
+    ),
+)
+
+# Collection of all declarations
+declarations = [dip_fetch_decl, dip_search_decl]
+
+
