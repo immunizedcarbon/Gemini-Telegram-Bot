@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
+from collections import deque
 
 from telebot import TeleBot
 from telebot.types import Message
@@ -56,6 +57,37 @@ class ChatManager:
             del self.sessions[uid]
 
 
+class RateLimiter:
+    """Simple token and request limiter for the Gemini API."""
+
+    def __init__(self, rpm: int, tpm: int) -> None:
+        self.rpm = rpm
+        self.tpm = tpm
+        self.req_times: deque[float] = deque()
+        self.token_times: deque[Tuple[float, int]] = deque()
+
+    def _cleanup(self, now: float) -> None:
+        while self.req_times and now - self.req_times[0] > 60:
+            self.req_times.popleft()
+        while self.token_times and now - self.token_times[0][0] > 60:
+            self.token_times.popleft()
+
+    def can_make_request(self, tokens: int) -> bool:
+        now = time.monotonic()
+        self._cleanup(now)
+        if len(self.req_times) >= self.rpm:
+            return False
+        if sum(t for _, t in self.token_times) + tokens > self.tpm:
+            return False
+        return True
+
+    def record(self, tokens: int) -> None:
+        now = time.monotonic()
+        self.req_times.append(now)
+        self.token_times.append((now, tokens))
+        self._cleanup(now)
+
+
 chat_manager = ChatManager(conf.session_ttl)
 
 model_1 = conf.model_1
@@ -66,7 +98,22 @@ search_tool = {"google_search": {}}
 
 logger = logging.getLogger(__name__)
 
+rate_limiter = RateLimiter(conf.gemini_rpm_limit, conf.gemini_tpm_limit)
+
 client: Optional[genai.Client] = None
+
+# Cache model metadata to avoid repeated requests
+_model_cache: Dict[str, types.Model] = {}
+
+
+async def _get_model_info(model: str) -> types.Model:
+    """Return model info using cached data when available."""
+    info = _model_cache.get(model)
+    if info is None:
+        client = _ensure_client()
+        info = await client.aio.models.get(model=model)
+        _model_cache[model] = info
+    return info
 
 
 def _format_sources(candidate: types.Candidate | None) -> str | None:
@@ -125,12 +172,31 @@ async def gemini_stream(
         chat = chat_manager.get_chat(str(message.from_user.id), model=model_type)
         chat_manager.cleanup()
 
+        model_info = await _get_model_info(model_type)
+        history = chat.get_history()
+        contents = history + (query if isinstance(query, list) else [query])
+        tokens = await client.aio.models.count_tokens(
+            model=model_type,
+            contents=contents,
+        )
+        if tokens.total_tokens and tokens.total_tokens > model_info.input_token_limit:
+            await safe_edit(
+                bot,
+                sent_message,
+                "Prompt too long for model. Please shorten your message.",
+            )
+            return
+        if not rate_limiter.can_make_request(tokens.total_tokens or 0):
+            await safe_edit(bot, sent_message, "Rate limit reached. Please wait.")
+            return
+
         response = await chat.send_message_stream(query)
 
         full_response = ""
         last_update = time.monotonic()
         update_interval = conf.streaming_update_interval
         last_candidate: types.Candidate | None = None
+        usage_tokens: int | None = None
 
         async for chunk in response:
             if getattr(chunk, "text", ""):
@@ -140,6 +206,8 @@ async def gemini_stream(
                     last_update = time.monotonic()
             if chunk.candidates:
                 last_candidate = chunk.candidates[0]
+            if chunk.usage_metadata and chunk.usage_metadata.total_token_count:
+                usage_tokens = chunk.usage_metadata.total_token_count
 
         sources = _format_sources(last_candidate) if last_candidate else None
         final_text = escape(full_response)
@@ -148,6 +216,16 @@ async def gemini_stream(
 
         await safe_edit(bot, sent_message, final_text, parse_markdown=False)
 
+        if usage_tokens is not None:
+            rate_limiter.record(usage_tokens)
+
+    except genai.errors.APIError as exc:  # pragma: no cover - API issues
+        logger.exception("Gemini API error")
+        msg = f"{error_info}\nAPI error {exc.code}: {exc.message}"
+        if sent_message:
+            await safe_edit(bot, sent_message, msg, parse_markdown=False)
+        else:
+            await bot.reply_to(message, msg)
     except Exception as exc:  # pragma: no cover - network issues
         logger.exception("Gemini stream failed")
         if sent_message:
