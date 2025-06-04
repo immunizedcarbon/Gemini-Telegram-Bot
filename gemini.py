@@ -14,7 +14,7 @@ from google import genai
 from google.genai import chats, types
 
 from config import conf, safety_settings
-from utils import safe_edit
+from utils import safe_edit, split_text, MAX_MESSAGE_LENGTH
 from md2tgmd import escape
 
 
@@ -201,7 +201,10 @@ async def gemini_stream(
         async for chunk in response:
             if getattr(chunk, "text", ""):
                 full_response += chunk.text
-                if time.monotonic() - last_update >= update_interval:
+                if (
+                    len(full_response) <= MAX_MESSAGE_LENGTH
+                    and time.monotonic() - last_update >= update_interval
+                ):
                     await safe_edit(bot, sent_message, full_response)
                     last_update = time.monotonic()
             if chunk.candidates:
@@ -214,13 +217,20 @@ async def gemini_stream(
         if sources:
             final_text += "\n\n" + sources
 
+        chunks = split_text(final_text)
         await safe_edit(
             bot,
             sent_message,
-            final_text,
+            chunks[0],
             markdown=True,
             escape_text=False,
         )
+        for chunk in chunks[1:]:
+            await bot.send_message(
+                sent_message.chat.id,
+                chunk,
+                parse_mode="MarkdownV2",
+            )
 
         if usage_tokens is not None:
             rate_limiter.record(usage_tokens)
