@@ -17,6 +17,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - YouTube-Videos analysieren: Link mit /youtube und Frage schicken oder erst den
   Link senden und danach die Frage stellen
 - Nutzbar in privaten Chats oder Gruppen
+- Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
 ## Voraussetzungen
 
@@ -67,6 +68,9 @@ TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
 GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
 GEMINI_MODEL=gemini-2.5-flash-preview-05-20
 AUTHORIZED_USER_IDS=12345,67890
+# Optional limits for the free tier (defaults passend zum Modell)
+GEMINI_RPM_LIMIT=10
+GEMINI_TPM_LIMIT=250000
 # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
 SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
 ```
