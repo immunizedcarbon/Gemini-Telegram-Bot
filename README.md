@@ -11,6 +11,9 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Mehrere Nachrichten pro Unterhaltung
 - Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
   neu gestartet wird
+- Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift
+  gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
+  Antwort ausgegeben.
 - Nutzbar in privaten Chats oder Gruppen
 
 ## Voraussetzungen
@@ -172,6 +175,8 @@ und den Container beziehungsweise das Programm neu zu starten.
   neu gestartet wird
 
 Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
+Fotos oder Bilddateien können ebenfalls geschickt werden. Eine angefügte
+Beschriftung dient dabei als Prompt für Gemini.
 
 ## Lizenz
 

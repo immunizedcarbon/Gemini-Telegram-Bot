@@ -71,6 +71,11 @@ async def main() -> None:
         content_types=["text"],
         pass_bot=True,
     )
+    bot.register_message_handler(
+        handlers.gemini_image_handler,
+        content_types=["photo", "document"],
+        pass_bot=True,
+    )
 
     # Start bot
     logger.info("Starting Gemini_Telegram_Bot.")

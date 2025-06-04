@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from telebot import TeleBot
-import asyncio
 from telebot.types import Message
+from google.genai import types
 from md2tgmd import escape
 
 import gemini
@@ -56,3 +56,33 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
         return
     m = message.text.strip()
     await gemini.gemini_stream(bot, message, m, model_1)
+
+
+async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
+    """Handle image messages and caption prompts."""
+    if not await _check_authorized(message, bot):
+        return
+
+    file_id: str | None = None
+    mime_type = "image/jpeg"
+
+    if message.content_type == "photo":
+        file_id = message.photo[-1].file_id
+        mime_type = "image/jpeg"
+    elif message.content_type == "document" and message.document.mime_type and message.document.mime_type.startswith("image/"):
+        file_id = message.document.file_id
+        mime_type = message.document.mime_type
+
+    if not file_id:
+        return
+
+    try:
+        file = await bot.get_file(file_id)
+        image_bytes = await bot.download_file(file.file_path)
+    except Exception as exc:  # pragma: no cover - network issues
+        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
+        return
+
+    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+    prompt = message.caption.strip() if message.caption else "Describe this image."
+    await gemini.gemini_stream(bot, message, [image_part, prompt], model_1)
