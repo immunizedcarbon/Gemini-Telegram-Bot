@@ -67,9 +67,11 @@ TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
 GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
 GEMINI_MODEL=gemini-2.5-flash-preview-05-20
 AUTHORIZED_USER_IDS=12345,67890
+# SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
+SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
 ```
 
-`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
+`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` legt die Systemvorgaben fest und kann weggelassen werden. Mehrzeilige Texte werden mit `\n` getrennt. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
 
 ### Sicherheitseinstellungen
 
@@ -139,11 +141,14 @@ Ist Docker installiert, lässt sich der Bot auch in einem Container betreiben.
    ```env
     TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
     GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
-    GEMINI_MODEL=gemini-2.5-flash-preview-05-20
-    AUTHORIZED_USER_IDS=12345,67890
+   GEMINI_MODEL=gemini-2.5-flash-preview-05-20
+   AUTHORIZED_USER_IDS=12345,67890
+    # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
+    SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
     ```
     # AUTHORIZED_USER_IDS ist eine kommaseparierte Liste der Telegram-IDs,
     # die den Bot nutzen dürfen
+    # SYSTEM_INSTRUCTION legt die Systemvorgaben fest und kann ausgelassen werden
 
 
 3. Container starten:
@@ -166,6 +171,8 @@ services:
       TELEGRAM_BOT_API_KEY: "${TELEGRAM_BOT_API_KEY}"
       GEMINI_API_KEYS: "${GEMINI_API_KEYS}"
       GEMINI_MODEL: "${GEMINI_MODEL}"
+      # optional
+      SYSTEM_INSTRUCTION: "${SYSTEM_INSTRUCTION}"
 ```
 
 Mit `docker compose up -d` wird der Bot anschließend im Hintergrund gestartet.
