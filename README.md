@@ -213,8 +213,8 @@ Beschriftung dient dabei als Prompt für Gemini.
 PDF- oder Audiodateien funktionieren genauso: Datei senden und optional eine
 Frage in der Caption stellen.
 YouTube-Links funktionieren ähnlich: Link schicken und die Frage entweder
-nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` steht
-weiterhin zur Verfügung.
+nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` ist
+weiterhin nutzbar, erscheint aber nicht im Menü.
 
 ### Hinweis zur Textformatierung
 
