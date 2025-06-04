@@ -9,6 +9,8 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Chat‑Modell: `gemini-2.5-flash-preview-05-20` (via `GEMINI_MODEL` anpassbar)
 - Streaming‑Antworten für schnelle Rückmeldungen
 - Mehrere Nachrichten pro Unterhaltung
+- Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
+  neu gestartet wird
 - Nutzbar in privaten Chats oder Gruppen
 
 ## Voraussetzungen
@@ -168,7 +170,8 @@ und den Container beziehungsweise das Programm neu zu starten.
 - `/start` – Begrüßung
 - `/gemini <Text>` – Frage an den Bot stellen
 - `/clear` – bisherigen Verlauf löschen
-- Unterhaltungen verfallen nach einer Stunde Inaktivität
+- Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
+  neu gestartet wird
 
 Im Privatchat können Fragen auch direkt ohne Befehl gesendet werden.
 
