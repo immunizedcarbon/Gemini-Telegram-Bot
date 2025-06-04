@@ -25,7 +25,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
 - PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
 - Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
-- Bundestags-Daten durchsuchen: Mit `/bundestag` lassen sich Informationen aus dem Parlamentsarchiv abrufen.
+- Bundestags-Daten durchsuchen: Mit `/bundestag` oder auch direkt in natürlicher Sprache lassen sich Informationen aus dem Parlamentsarchiv abrufen.
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
@@ -207,7 +207,7 @@ und den Container beziehungsweise das Programm neu zu starten.
 ## Verwendung
 
 - `/clear` – bisherigen Verlauf löschen
-- `/bundestag` – Bundestags-Datenbank abfragen, z.B. `/bundestag vorgang id=1000`
+- `/bundestag` – Bundestags-Datenbank abfragen, z.B. `/bundestag vorgang id=1000`. Fragen können auch frei formuliert werden.
 - Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
   neu gestartet wird
 
