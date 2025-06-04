@@ -74,9 +74,16 @@ def _ensure_client() -> genai.Client:
 
 
 async def gemini_stream(
-    bot: TeleBot, message: Message, query: str, model_type: str
+    bot: TeleBot,
+    message: Message,
+    query: object,
+    model_type: str,
 ) -> None:
-    """Stream a chat response from Gemini and edit the message as chunks arrive."""
+    """Stream a chat response from Gemini.
+
+    ``query`` may be a plain string or a list of ``types.Part`` objects mixed
+    with strings for multimodal prompts.
+    """
 
     sent_message: Message | None = None
     try:
