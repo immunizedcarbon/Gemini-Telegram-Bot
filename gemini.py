@@ -39,6 +39,7 @@ class ChatManager:
             model=model,
             config=types.GenerateContentConfig(
                 tools=[search_tool],
+                system_instruction=conf.system_instruction,
                 safety_settings=safety_settings,
             ),
         )
