@@ -214,7 +214,13 @@ async def gemini_stream(
         if sources:
             final_text += "\n\n" + sources
 
-        await safe_edit(bot, sent_message, final_text, parse_markdown=False)
+        await safe_edit(
+            bot,
+            sent_message,
+            final_text,
+            markdown=True,
+            escape_text=False,
+        )
 
         if usage_tokens is not None:
             rate_limiter.record(usage_tokens)
@@ -223,7 +229,7 @@ async def gemini_stream(
         logger.exception("Gemini API error")
         msg = f"{error_info}\nAPI error {exc.code}: {exc.message}"
         if sent_message:
-            await safe_edit(bot, sent_message, msg, parse_markdown=False)
+            await safe_edit(bot, sent_message, msg, markdown=False)
         else:
             await bot.reply_to(message, msg)
     except Exception as exc:  # pragma: no cover - network issues
@@ -233,7 +239,7 @@ async def gemini_stream(
                 bot,
                 sent_message,
                 f"{error_info}\nError details: {exc}",
-                parse_markdown=False,
+                markdown=False,
             )
         else:
             await bot.reply_to(message, f"{error_info}\nError details: {exc}")
