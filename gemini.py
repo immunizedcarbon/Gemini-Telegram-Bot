@@ -268,3 +268,36 @@ async def gemini_youtube_stream(
         file_data=types.FileData(file_uri=youtube_url)
     )
     await gemini_stream(bot, message, [video_part, prompt], model_type)
+
+
+async def gemini_pdf_stream(
+    bot: TeleBot,
+    message: Message,
+    pdf_bytes: bytes,
+    prompt: str,
+    model_type: str,
+) -> None:
+    """Stream a response based on a PDF file and prompt."""
+
+    pdf_part = types.Part.from_bytes(
+        data=pdf_bytes,
+        mime_type="application/pdf",
+    )
+    await gemini_stream(bot, message, [pdf_part, prompt], model_type)
+
+
+async def gemini_audio_stream(
+    bot: TeleBot,
+    message: Message,
+    audio_bytes: bytes,
+    mime_type: str,
+    prompt: str,
+    model_type: str,
+) -> None:
+    """Stream a response based on an audio clip and prompt."""
+
+    audio_part = types.Part.from_bytes(
+        data=audio_bytes,
+        mime_type=mime_type,
+    )
+    await gemini_stream(bot, message, [prompt, audio_part], model_type)
