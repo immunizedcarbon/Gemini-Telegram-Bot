@@ -57,21 +57,21 @@ async def main() -> None:
     await bot.delete_my_commands(scope=None, language_code=None)
     await bot.set_my_commands(
         commands=[
-            telebot.types.BotCommand("start", "Start"),
-            telebot.types.BotCommand("gemini", f"using {conf.model_1}"),
             telebot.types.BotCommand("clear", "Clear all history"),
         ],
     )
     # Init commands
-    bot.register_message_handler(handlers.start, commands=["start"], pass_bot=True)
     bot.register_message_handler(
-        handlers.gemini_stream_handler, commands=["gemini"], pass_bot=True
+        handlers.gemini_stream_handler,
+        commands=["gemini"],
+        pass_bot=True,
+        content_types=["text", "photo", "document"],
     )
     bot.register_message_handler(handlers.clear, commands=["clear"], pass_bot=True)
     bot.register_message_handler(
         handlers.gemini_private_handler,
         func=lambda message: message.chat.type == "private",
-        content_types=["text"],
+        content_types=["text", "photo", "document"],
         pass_bot=True,
     )
 

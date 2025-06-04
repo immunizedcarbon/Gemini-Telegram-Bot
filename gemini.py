@@ -10,9 +10,9 @@ from typing import Dict, Optional
 from telebot import TeleBot
 from telebot.types import Message
 from google import genai
-from google.genai import chats
+from google.genai import chats, types
 
-from config import conf
+from config import conf, safety_settings
 from utils import safe_edit
 
 
@@ -35,7 +35,13 @@ class ChatManager:
             return session.chat
 
         client = _ensure_client()
-        chat = client.aio.chats.create(model=model, config={"tools": [search_tool]})
+        chat = client.aio.chats.create(
+            model=model,
+            config=types.GenerateContentConfig(
+                tools=[search_tool],
+                safety_settings=safety_settings,
+            ),
+        )
         self.sessions[user_id] = ChatSession(chat)
         return chat
 
@@ -74,9 +80,19 @@ def _ensure_client() -> genai.Client:
 
 
 async def gemini_stream(
-    bot: TeleBot, message: Message, query: str, model_type: str
+    bot: TeleBot,
+    message: Message,
+    query: str,
+    model_type: str,
+    *,
+    images: list[types.Part] | None = None,
 ) -> None:
-    """Stream a chat response from Gemini and edit the message as chunks arrive."""
+    """Stream a chat response from Gemini and edit the message as chunks arrive.
+
+    ``images`` may contain ``Part`` objects created from image bytes which will
+    be prepended to the text prompt. This allows image understanding features
+    such as captioning or question answering.
+    """
 
     sent_message: Message | None = None
     try:
@@ -85,7 +101,12 @@ async def gemini_stream(
         chat = chat_manager.get_chat(str(message.from_user.id), model=model_type)
         chat_manager.cleanup()
 
-        response = await chat.send_message_stream(query)
+        contents: list = []
+        if images:
+            contents.extend(images)
+        contents.append(query)
+
+        response = await chat.send_message_stream(contents)
 
         full_response = ""
         last_update = time.monotonic()

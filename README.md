@@ -165,15 +165,20 @@ Google veröffentlicht regelmäßig neue Gemini‑Modelle. Um ein anderes Modell
 nutzen, reicht es, den Namen in der `.env`‑Datei bei `GEMINI_MODEL` anzupassen
 und den Container beziehungsweise das Programm neu zu starten.
 
+Die voreingestellten Sicherheitsfilter des Modells sind in `config.py` auf
+`BLOCK_NONE` gesetzt und damit komplett deaktiviert. Bei Bedarf lassen sie sich
+dort anpassen.
+
 ## Verwendung
 
-- `/start` – Begrüßung
-- `/gemini <Text>` – Frage an den Bot stellen
 - `/clear` – bisherigen Verlauf löschen
 - Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
   neu gestartet wird
 
-Im Privatchat können Fragen auch direkt ohne Befehl gesendet werden.
+Im Privatchat können Fragen direkt ohne Befehl gesendet werden. Bilder können
+ebenfalls geschickt werden. Liegt dem Bild eine Frage oder Beschreibung bei,
+nutzt der Bot diese zur Analyse. Andernfalls gibt er eine kurze Beschreibung
+des Bildes zurück.
 
 ## Lizenz
 

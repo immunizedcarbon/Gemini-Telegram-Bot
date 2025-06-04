@@ -4,6 +4,7 @@ from telebot import TeleBot
 import asyncio
 from telebot.types import Message
 from md2tgmd import escape
+from google.genai import types
 
 import gemini
 from config import conf
@@ -23,40 +24,48 @@ async def _check_authorized(message: Message, bot: TeleBot) -> bool:
     return False
 
 
+async def _extract_image_parts(message: Message, bot: TeleBot) -> list[types.Part]:
+    """Return a list of Gemini Parts built from images in the message."""
+    parts: list[types.Part] = []
 
-async def start(message: Message, bot: TeleBot) -> None:
-    """Send a greeting to the user."""
-    if not await _check_authorized(message, bot):
-        return
+    if message.photo:
+        photo = message.photo[-1]
+        file_info = await bot.get_file(photo.file_id)
+        img_bytes = await bot.download_file(file_info.file_path)
+        parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
 
-    try:
-        await bot.reply_to(
-            message,
-            escape(
-                "Welcome, you can ask me questions now. \nFor example: `Who is john lennon?`"
-            ),
-            parse_mode="MarkdownV2",
+    if message.document and (message.document.mime_type or "").startswith("image/"):
+        file_info = await bot.get_file(message.document.file_id)
+        img_bytes = await bot.download_file(file_info.file_path)
+        parts.append(
+            types.Part.from_bytes(
+                data=img_bytes,
+                mime_type=message.document.mime_type or "image/jpeg",
+            )
         )
-    except IndexError:
-        await bot.reply_to(message, error_info)
+
+    return parts
+
+
+
 
 
 async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
     """Handle /gemini command using the flash model."""
     if not await _check_authorized(message, bot):
         return
+    content = (message.text or message.caption or "").strip()
     try:
-        m = message.text.strip().split(maxsplit=1)[1].strip()
+        m = content.split(maxsplit=1)[1].strip()
     except IndexError:
         await bot.reply_to(
             message,
-            escape(
-                "Please add what you want to say after /gemini. \nFor example: `/gemini Who is john lennon?`"
-            ),
+            escape("Please add what you want to say after /gemini."),
             parse_mode="MarkdownV2",
         )
         return
-    await gemini.gemini_stream(bot, message, m, model_1)
+    images = await _extract_image_parts(message, bot)
+    await gemini.gemini_stream(bot, message, m, model_1, images=images)
 
 
 async def clear(message: Message, bot: TeleBot) -> None:
@@ -71,5 +80,8 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
     """Handle plain text messages in private chats."""
     if not await _check_authorized(message, bot):
         return
-    m = message.text.strip()
-    await gemini.gemini_stream(bot, message, m, model_1)
+    text = (message.text or message.caption or "").strip()
+    images = await _extract_image_parts(message, bot)
+    if not text and images:
+        text = "Describe this image."
+    await gemini.gemini_stream(bot, message, text, model_1, images=images)
