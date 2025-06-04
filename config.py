@@ -25,7 +25,7 @@ class BotConfig:
     streaming_update_interval: float = 0.5
     # Lifetime of an inactive chat session in seconds. Set to 0 for unlimited
     # lifetime. Sessions exist only while the bot process runs.
-    session_ttl: float = 0.0
+    session_ttl: float = float(os.getenv("SESSION_TTL", 0.0))
     # Comma separated list of allowed Telegram user IDs
     authorized_user_ids: set[int] = field(default_factory=lambda: {
         int(uid)
