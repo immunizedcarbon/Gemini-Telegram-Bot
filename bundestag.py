@@ -1,13 +1,11 @@
 """Access helpers for the Bundestag DIP API."""
 
-from __future__ import annotations
-
-import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
 import aiohttp
+from google.genai import types
 
 from config import conf
 
@@ -38,3 +36,33 @@ async def search(resource: str, **params: Any) -> Any:
     """Search for entities of ``resource`` type using query parameters."""
     async with aiohttp.ClientSession() as session:
         return await _request(session, resource, params)
+
+
+async def dip_fetch(resource: str, id: str) -> Any:
+    """Return JSON data for a single item from the DIP API.
+
+    Parameters
+    ----------
+    resource: str
+        Resource name such as ``vorgang`` or ``drucksache``.
+    id: str
+        Identifier of the item to fetch.
+    """
+
+    return await fetch_entity(resource, id)
+
+
+async def dip_search(resource: str, params: Optional[Dict[str, str]] = None) -> Any:
+    """Search the DIP API and return JSON results.
+
+    Parameters
+    ----------
+    resource: str
+        Resource name to search.
+    params: dict[str, str] | None
+        Optional query parameters as defined by the DIP API.
+    """
+
+    return await search(resource, **(params or {}))
+
+
