@@ -10,9 +10,9 @@ from typing import Dict, Optional
 from telebot import TeleBot
 from telebot.types import Message
 from google import genai
-from google.genai import chats
+from google.genai import chats, types
 
-from config import conf
+from config import conf, safety_settings
 from utils import safe_edit
 
 
@@ -35,7 +35,13 @@ class ChatManager:
             return session.chat
 
         client = _ensure_client()
-        chat = client.aio.chats.create(model=model, config={"tools": [search_tool]})
+        chat = client.aio.chats.create(
+            model=model,
+            config=types.GenerateContentConfig(
+                tools=[search_tool],
+                safety_settings=safety_settings,
+            ),
+        )
         self.sessions[user_id] = ChatSession(chat)
         return chat
 

@@ -66,7 +66,13 @@ GEMINI_API_KEYS=<DEIN_GEMINI_KEY>
 GEMINI_MODEL=gemini-2.5-flash-preview-05-20
 AUTHORIZED_USER_IDS=12345,67890
 ```
+
 `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
+
+### Sicherheitseinstellungen
+
+Alle Safety-Filter der Gemini-API sind im Auslieferungszustand deaktiviert (`BLOCK_NONE`). Die entsprechenden
+Einstellungen stehen in `config.py` und lassen sich bei Bedarf ändern.
 
 ### 6. Bot starten
 
