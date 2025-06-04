@@ -43,6 +43,7 @@ async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
             parse_mode="MarkdownV2",
         )
         return
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_stream(bot, message, m, model_1)
 
 
@@ -66,6 +67,7 @@ async def youtube_command_handler(message: Message, bot: TeleBot) -> None:
         return
 
     prompt = parts[2].strip()
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_youtube_stream(bot, message, url, prompt, model_1)
 
 
@@ -86,6 +88,7 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
     # If user previously sent a YouTube link without a prompt
     if message.from_user.id in pending_youtube and not YOUTUBE_RE.search(m):
         url = pending_youtube.pop(message.from_user.id)
+        await bot.send_chat_action(message.chat.id, "typing")
         await gemini.gemini_youtube_stream(bot, message, url, m, model_1)
         return
 
@@ -98,10 +101,12 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
             pending_youtube[message.from_user.id] = url
             await bot.reply_to(message, "What would you like to do with this video?")
             return
+        await bot.send_chat_action(message.chat.id, "typing")
         await gemini.gemini_youtube_stream(bot, message, url, prompt, model_1)
         return
 
     # Regular text
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_stream(bot, message, m, model_1)
 
 
@@ -132,6 +137,7 @@ async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
 
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
     prompt = message.caption.strip() if message.caption else "Describe this image."
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_stream(bot, message, [image_part, prompt], model_1)
 
 
@@ -151,6 +157,7 @@ async def gemini_pdf_handler(message: Message, bot: TeleBot) -> None:
         return
 
     prompt = message.caption.strip() if message.caption else "Summarize this document"
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_pdf_stream(bot, message, pdf_bytes, prompt, model_1)
 
 
@@ -186,4 +193,5 @@ async def gemini_audio_handler(message: Message, bot: TeleBot) -> None:
         return
 
     prompt = message.caption.strip() if message.caption else "Describe this audio clip"
+    await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_audio_stream(bot, message, audio_bytes, mime_type, prompt, model_1)
