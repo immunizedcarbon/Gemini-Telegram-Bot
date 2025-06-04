@@ -69,6 +69,26 @@ async def main() -> None:
     )
     bot.register_message_handler(handlers.clear, commands=["clear"], pass_bot=True)
     bot.register_message_handler(
+        handlers.gemini_pdf_handler,
+        content_types=["document"],
+        func=lambda m: m.document is not None and m.document.mime_type == "application/pdf",
+        pass_bot=True,
+    )
+    bot.register_message_handler(
+        handlers.gemini_audio_handler,
+        content_types=["audio", "voice", "document"],
+        func=lambda m: (
+            (m.content_type in {"audio", "voice"})
+            or (
+                m.content_type == "document"
+                and m.document is not None
+                and m.document.mime_type
+                and m.document.mime_type.startswith("audio/")
+            )
+        ),
+        pass_bot=True,
+    )
+    bot.register_message_handler(
         handlers.gemini_private_handler,
         func=lambda message: message.chat.type == "private",
         content_types=["text"],

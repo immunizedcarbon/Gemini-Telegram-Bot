@@ -136,3 +136,57 @@ async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
     prompt = message.caption.strip() if message.caption else "Describe this image."
     await gemini.gemini_stream(bot, message, [image_part, prompt], model_1)
+
+
+async def gemini_pdf_handler(message: Message, bot: TeleBot) -> None:
+    """Handle PDF documents with an optional caption prompt."""
+    if not await _check_authorized(message, bot):
+        return
+
+    if not message.document or message.document.mime_type != "application/pdf":
+        return
+
+    try:
+        file = await bot.get_file(message.document.file_id)
+        pdf_bytes = await bot.download_file(file.file_path)
+    except Exception as exc:  # pragma: no cover - network issues
+        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
+        return
+
+    prompt = message.caption.strip() if message.caption else "Summarize this document"
+    await gemini.gemini_pdf_stream(bot, message, pdf_bytes, prompt, model_1)
+
+
+async def gemini_audio_handler(message: Message, bot: TeleBot) -> None:
+    """Handle audio or voice messages."""
+    if not await _check_authorized(message, bot):
+        return
+
+    mime_type = None
+    file_id = None
+    if message.content_type == "voice" and message.voice:
+        file_id = message.voice.file_id
+        mime_type = "audio/ogg"
+    elif message.content_type == "audio" and message.audio:
+        file_id = message.audio.file_id
+        mime_type = message.audio.mime_type or "audio/mpeg"
+    elif (
+        message.content_type == "document"
+        and message.document.mime_type
+        and message.document.mime_type.startswith("audio/")
+    ):
+        file_id = message.document.file_id
+        mime_type = message.document.mime_type
+
+    if not file_id or not mime_type:
+        return
+
+    try:
+        file = await bot.get_file(file_id)
+        audio_bytes = await bot.download_file(file.file_path)
+    except Exception as exc:  # pragma: no cover - network issues
+        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
+        return
+
+    prompt = message.caption.strip() if message.caption else "Describe this audio clip"
+    await gemini.gemini_audio_stream(bot, message, audio_bytes, mime_type, prompt, model_1)

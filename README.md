@@ -14,6 +14,10 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift
 -  gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
   Antwort ausgegeben.
+- PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich
+  zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
+- Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder
+  transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
 - YouTube-Videos analysieren: Link senden und die Frage entweder in einer
   separaten Nachricht oder direkt zusammen mit dem Link stellen. Der Befehl
   `/youtube` ist weiterhin nutzbar, erscheint aber nicht im Menü.
@@ -197,6 +201,8 @@ und den Container beziehungsweise das Programm neu zu starten.
 Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
 Fotos oder Bilddateien können ebenfalls geschickt werden. Eine angefügte
 Beschriftung dient dabei als Prompt für Gemini.
+PDF- oder Audiodateien funktionieren genauso: Datei senden und optional eine
+Frage in der Caption stellen.
 YouTube-Links funktionieren ähnlich: Link schicken und die Frage entweder
 nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` steht
 weiterhin zur Verfügung.
