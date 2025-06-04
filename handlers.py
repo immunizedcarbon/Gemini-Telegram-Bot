@@ -5,6 +5,9 @@ from telebot.types import Message
 from google.genai import types
 import re
 from md2tgmd import escape
+import json
+
+import bundestag
 
 import gemini
 from config import conf
@@ -80,6 +83,40 @@ async def youtube_command_handler(message: Message, bot: TeleBot) -> None:
     prompt = parts[2].strip()
     await bot.send_chat_action(message.chat.id, "typing")
     await gemini.gemini_youtube_stream(bot, message, url, prompt, model_1)
+
+
+async def bundestag_command_handler(message: Message, bot: TeleBot) -> None:
+    """Query the Bundestag DIP API and summarize the result with Gemini."""
+    if not await _check_authorized(message, bot):
+        return
+    parts = message.text.split()
+    if len(parts) < 2:
+        await bot.reply_to(
+            message,
+            escape("Usage: /bundestag <ressource> [key=value ...]"),
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    resource = parts[1]
+    params = {}
+    for token in parts[2:]:
+        if "=" in token:
+            k, v = token.split("=", 1)
+            params[k] = v
+    try:
+        await bot.send_chat_action(message.chat.id, "typing")
+        if "id" in params:
+            data = await bundestag.fetch_entity(resource, params["id"])
+        else:
+            data = await bundestag.search(resource, **params)
+    except Exception as exc:  # pragma: no cover - network issues
+        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
+        return
+
+    short = json.dumps(data)[:2000]
+    prompt = f"Fasse die folgenden Daten aus dem Deutschen Bundestag zusammen:\n{short}"
+    await gemini.gemini_stream(bot, message, prompt, model_1)
 
 
 async def clear(message: Message, bot: TeleBot) -> None:

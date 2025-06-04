@@ -25,6 +25,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
 - PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
 - Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
+- Bundestags-Daten durchsuchen: Mit `/bundestag` lassen sich Informationen aus dem Parlamentsarchiv abrufen.
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
@@ -80,6 +81,8 @@ AUTHORIZED_USER_IDS=12345,67890
 # Optional limits for the free tier (defaults passend zum Modell)
 GEMINI_RPM_LIMIT=10
 GEMINI_TPM_LIMIT=250000
+# Optionaler Bundestag-DIP-API-Schlüssel für Parlamentsdaten
+DIP_API_KEY=<DEIN_DIP_KEY>
 # Lifetime of inactive sessions in seconds (0 = unlimited)
 SESSION_TTL=0
 # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
@@ -204,6 +207,7 @@ und den Container beziehungsweise das Programm neu zu starten.
 ## Verwendung
 
 - `/clear` – bisherigen Verlauf löschen
+- `/bundestag` – Bundestags-Datenbank abfragen, z.B. `/bundestag vorgang id=1000`
 - Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
   neu gestartet wird
 
