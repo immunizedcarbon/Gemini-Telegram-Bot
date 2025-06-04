@@ -20,7 +20,7 @@ USER bot
 
 # Environment variables for runtime configuration
 ENV TELEGRAM_BOT_API_KEY="" \
-    GEMINI_API_KEYS="" \
+    GEMINI_API_KEY="" \
     GEMINI_MODEL="gemini-2.5-flash-preview-05-20"
 
 CMD ["python", "main.py"]

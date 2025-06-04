@@ -25,9 +25,9 @@ def parse_args() -> argparse.Namespace:
         help="Telegram token",
     )
     parser.add_argument(
-        "GOOGLE_GEMINI_KEY",
+        "GEMINI_API_KEY",
         nargs="?",
-        default=os.getenv("GOOGLE_GEMINI_KEY") or os.getenv("GEMINI_API_KEYS"),
+        default=os.getenv("GEMINI_API_KEY"),
         help="Google Gemini API key",
     )
     return parser.parse_args()
@@ -45,12 +45,12 @@ logger = logging.getLogger(__name__)
 async def main() -> None:
     """Start the bot and register command handlers."""
     # Init bot
-    if not options.tg_token or not options.GOOGLE_GEMINI_KEY:
+    if not options.tg_token or not options.GEMINI_API_KEY:
         raise SystemExit(
             "API keys must be provided via arguments or environment variables"
         )
 
-    gemini.init_client(options.GOOGLE_GEMINI_KEY)
+    gemini.init_client(options.GEMINI_API_KEY)
 
     bot = AsyncTeleBot(options.tg_token)
     await bot.delete_my_commands(scope=None, language_code=None)
