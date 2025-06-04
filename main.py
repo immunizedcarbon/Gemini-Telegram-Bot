@@ -56,10 +56,14 @@ async def main() -> None:
     await bot.delete_my_commands(scope=None, language_code=None)
     await bot.set_my_commands(
         commands=[
+            telebot.types.BotCommand("start", "Show help"),
             telebot.types.BotCommand("clear", "Clear all history"),
         ],
     )
     # Init commands
+    bot.register_message_handler(
+        handlers.start_handler, commands=["start"], pass_bot=True
+    )
     bot.register_message_handler(
         handlers.gemini_stream_handler, commands=["gemini"], pass_bot=True
     )

@@ -30,6 +30,17 @@ async def _check_authorized(message: Message, bot: TeleBot) -> bool:
     return False
 
 
+async def start_handler(message: Message, bot: TeleBot) -> None:
+    """Reply with a short summary of the bot's features."""
+    if not await _check_authorized(message, bot):
+        return
+    text = (
+        "I can chat with you using Gemini and also understand images, PDFs "
+        "and audio files. Send me text or files and I'll respond. Use /clear to reset our conversation."
+    )
+    await bot.reply_to(message, escape(text), parse_mode="MarkdownV2")
+
+
 async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
     """Handle /gemini command using the flash model."""
     if not await _check_authorized(message, bot):
