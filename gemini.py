@@ -14,6 +14,7 @@ from google.genai import chats, types
 
 from config import conf, safety_settings
 from utils import safe_edit
+from md2tgmd import escape
 
 
 @dataclass
@@ -68,6 +69,31 @@ logger = logging.getLogger(__name__)
 client: Optional[genai.Client] = None
 
 
+def _format_sources(candidate: types.Candidate | None) -> str | None:
+    """Return Markdown formatted sources from ``candidate`` if available."""
+    if not candidate or not candidate.grounding_metadata:
+        return None
+    chunks = candidate.grounding_metadata.grounding_chunks or []
+    links: list[str] = []
+    for chunk in chunks:
+        web = chunk.web
+        if not web or not web.uri:
+            continue
+        title = web.title or web.domain or "source"
+        links.append(f"[{escape(title)}]({web.uri})")
+
+    if not links:
+        return None
+    # Remove duplicates while preserving order
+    deduped = []
+    seen = set()
+    for link in links:
+        if link not in seen:
+            seen.add(link)
+            deduped.append(link)
+    return "Sources: " + ", ".join(deduped)
+
+
 def init_client(api_key: str) -> None:
     """Configure the global Gemini client."""
     global client
@@ -104,6 +130,7 @@ async def gemini_stream(
         full_response = ""
         last_update = time.monotonic()
         update_interval = conf.streaming_update_interval
+        last_candidate: types.Candidate | None = None
 
         async for chunk in response:
             if getattr(chunk, "text", ""):
@@ -111,8 +138,15 @@ async def gemini_stream(
                 if time.monotonic() - last_update >= update_interval:
                     await safe_edit(bot, sent_message, full_response)
                     last_update = time.monotonic()
+            if chunk.candidates:
+                last_candidate = chunk.candidates[0]
 
-        await safe_edit(bot, sent_message, full_response)
+        sources = _format_sources(last_candidate) if last_candidate else None
+        final_text = escape(full_response)
+        if sources:
+            final_text += "\n\n" + sources
+
+        await safe_edit(bot, sent_message, final_text, parse_markdown=False)
 
     except Exception as exc:  # pragma: no cover - network issues
         logger.exception("Gemini stream failed")
