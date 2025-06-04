@@ -3,6 +3,17 @@
 Ein einfach zu installierender Telegram‑Bot für den Raspberry Pi, der über die
 Google‑Gemini‑API Antworten generiert. Der Bot merkt sich pro Benutzer den
 Gesprächsverlauf und zeigt Antworten stückweise an.
+## Inhaltsverzeichnis
+
+- [Funktionen](#funktionen)
+- [Voraussetzungen](#voraussetzungen)
+- [Installation](#installation)
+- [Automatischer Start per systemd](#automatischer-start-per-systemd)
+- [Docker-Variante](#docker-variante)
+- [Modell aktualisieren](#modell-aktualisieren)
+- [Verwendung](#verwendung)
+- [Lizenz](#lizenz)
+
 
 ## Funktionen
 
@@ -11,16 +22,9 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Mehrere Nachrichten pro Unterhaltung
 - Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
   neu gestartet wird
-- Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift
--  gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als
-  Antwort ausgegeben.
-- PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich
-  zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
-- Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder
-  transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
-- YouTube-Videos analysieren: Link senden und die Frage entweder in einer
-  separaten Nachricht oder direkt zusammen mit dem Link stellen. Der Befehl
-  `/youtube` ist weiterhin nutzbar, erscheint aber nicht im Menü.
+- Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
+- PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
+- Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
@@ -33,7 +37,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Ein Gemini‑API‑Key aus [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Git zum Klonen des Projekts
 
-## Installation Schritt für Schritt
+## Installation
 
 ### 1. System aktualisieren und Pakete installieren
 
