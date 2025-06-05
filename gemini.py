@@ -234,9 +234,14 @@ async def gemini_stream(
                     leftover = buffers[-1][MAX_MESSAGE_LENGTH:]
                     await safe_edit(bot, messages[-1], part)
                     buffers[-1] = part
+                    send_text = (
+                        escape(leftover[:MAX_MESSAGE_LENGTH])
+                        if leftover
+                        else "\u200b"
+                    )
                     new_msg = await bot.send_message(
                         sent_message.chat.id,
-                        escape(leftover) if leftover else "\u200b",
+                        send_text,
                         parse_mode="MarkdownV2",
                     )
                     messages.append(new_msg)
