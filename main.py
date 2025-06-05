@@ -58,7 +58,6 @@ async def main() -> None:
         commands=[
             telebot.types.BotCommand("start", "Show help"),
             telebot.types.BotCommand("clear", "Clear all history"),
-            telebot.types.BotCommand("bundestag", "Query Bundestag data"),
         ],
     )
     # Init commands
@@ -70,9 +69,6 @@ async def main() -> None:
     )
     bot.register_message_handler(
         handlers.youtube_command_handler, commands=["youtube", "yt"], pass_bot=True
-    )
-    bot.register_message_handler(
-        handlers.bundestag_command_handler, commands=["bundestag"], pass_bot=True
     )
     bot.register_message_handler(handlers.clear, commands=["clear"], pass_bot=True)
     bot.register_message_handler(

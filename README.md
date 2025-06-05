@@ -25,7 +25,6 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
 - PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
 - Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
-- Bundestags-Daten durchsuchen: Mit `/bundestag` lassen sich Informationen aus dem Parlamentsarchiv abrufen.
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
@@ -81,18 +80,13 @@ AUTHORIZED_USER_IDS=12345,67890
 # Optional limits for the free tier (defaults passend zum Modell)
 GEMINI_RPM_LIMIT=10
 GEMINI_TPM_LIMIT=250000
-# Optionaler Bundestag-DIP-API-Schlüssel für Parlamentsdaten
-DIP_API_KEY=<DEIN_DIP_KEY>
 # Lifetime of inactive sessions in seconds (0 = unlimited)
 SESSION_TTL=0
-# Set to false if the chosen model does not support tools
-ENABLE_TOOLS=true
 # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
 SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
 ```
 
 `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` legt die Systemvorgaben fest und kann weggelassen werden. Mehrzeilige Texte werden mit `\n` getrennt. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
-`ENABLE_TOOLS` aktiviert die Google-Suche und Bundestag-Funktionen. Falls dein Modell diese Funktionen nicht unterstützt, setze den Wert auf `false`.
 
 ### Sicherheitseinstellungen
 
@@ -168,15 +162,11 @@ Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
    AUTHORIZED_USER_IDS=12345,67890
    # optional
    SESSION_TTL=0
-   ENABLE_TOOLS=true
    SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
    ```
 
 `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs,
   die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` kann weggelassen werden.
-`ENABLE_TOOLS` schaltet die zusätzlichen Such- und Bundestag-Funktionen ein und
-  sollte auf `false` gesetzt werden, wenn das genutzte Modell keine Tools
-  unterstützt.
 
 3. **Container starten**
 
@@ -214,8 +204,7 @@ und den Container beziehungsweise das Programm neu zu starten.
 ## Verwendung
 
 - `/clear` – bisherigen Verlauf löschen
-- `/bundestag` – Bundestags-Datenbank abfragen, z.B. `/bundestag vorgang id=1000`
-- Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
+ - Unterhaltungen bleiben erhalten, bis sie per `/clear` entfernt oder der Bot
   neu gestartet wird
 
 Im Privatchat können Fragen direkt ohne Befehl gesendet werden.
