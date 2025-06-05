@@ -38,10 +38,11 @@ class ChatManager:
             return session.chat
 
         client = _ensure_client()
+        tools = [search_tool, *bundestag_tools] if conf.enable_tools else None
         chat = client.aio.chats.create(
             model=model,
             config=types.GenerateContentConfig(
-                tools=[search_tool, *bundestag_tools],
+                tools=tools,
                 system_instruction=conf.system_instruction,
                 safety_settings=safety_settings,
             ),

@@ -85,11 +85,14 @@ GEMINI_TPM_LIMIT=250000
 DIP_API_KEY=<DEIN_DIP_KEY>
 # Lifetime of inactive sessions in seconds (0 = unlimited)
 SESSION_TTL=0
+# Set to false if the chosen model does not support tools
+ENABLE_TOOLS=true
 # SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
 SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
 ```
 
 `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` legt die Systemvorgaben fest und kann weggelassen werden. Mehrzeilige Texte werden mit `\n` getrennt. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen.
+`ENABLE_TOOLS` aktiviert die Google-Suche und Bundestag-Funktionen. Falls dein Modell diese Funktionen nicht unterstützt, setze den Wert auf `false`.
 
 ### Sicherheitseinstellungen
 
@@ -165,11 +168,15 @@ Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
    AUTHORIZED_USER_IDS=12345,67890
    # optional
    SESSION_TTL=0
+   ENABLE_TOOLS=true
    SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
    ```
 
-   `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs,
-   die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` kann weggelassen werden.
+`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs,
+  die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` kann weggelassen werden.
+`ENABLE_TOOLS` schaltet die zusätzlichen Such- und Bundestag-Funktionen ein und
+  sollte auf `false` gesetzt werden, wenn das genutzte Modell keine Tools
+  unterstützt.
 
 3. **Container starten**
 
