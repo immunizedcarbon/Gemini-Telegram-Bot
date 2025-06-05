@@ -1,268 +1,165 @@
 from __future__ import annotations
 
-from telebot import TeleBot
-from telebot.types import Message
-from google.genai import types
 import re
+import logging
+from telegram import Update
+from telegram.constants import ParseMode
+from telegram.ext import ContextTypes
 from md2tgmd import escape
-from utils import extract_urls, remove_urls
 
 import gemini
-from config import conf
+from config import settings
 
-error_info = conf.error_info
-before_generate_info = conf.before_generate_info
-model_1 = conf.model_1
-authorized_user_ids = conf.authorized_user_ids
-access_denied_info = conf.access_denied_info
+logger = logging.getLogger(__name__)
 
-# Map user ID to pending YouTube URL awaiting a prompt
-pending_youtube: dict[int, str] = {}
-
-# Simple regex to detect YouTube links
 YOUTUBE_RE = re.compile(r"https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)[^\s]+")
+MAX_MESSAGE_LENGTH = 4096
 
 
-async def _check_authorized(message: Message, bot: TeleBot) -> bool:
-    """Return True if user is allowed, else reply with denial."""
-    if message.from_user.id in authorized_user_ids:
-        return True
-    await bot.reply_to(message, access_denied_info)
-    return False
+def _split_text(text: str) -> list[str]:
+    chunks: list[str] = []
+    while len(text) > MAX_MESSAGE_LENGTH:
+        split_at = text.rfind("\n", 0, MAX_MESSAGE_LENGTH)
+        if split_at == -1:
+            split_at = MAX_MESSAGE_LENGTH
+        chunks.append(text[:split_at])
+        text = text[split_at:]
+    chunks.append(text)
+    return chunks
 
 
-async def start_handler(message: Message, bot: TeleBot) -> None:
-    """Reply with a short summary of the bot's features."""
-    if not await _check_authorized(message, bot):
+def _extract_urls(text: str) -> list[str]:
+    return re.findall(r"https?://[^\s]+", text)
+
+
+def _remove_urls(text: str) -> str:
+    return re.sub(r"https?://[^\s]+", "", text).strip()
+
+
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
         return
     text = (
-        "I can chat with you using Gemini and also understand images, PDFs "
-        "and audio files. Send me text or files and I'll respond. Use /clear to reset our conversation."
+        "Ich kann mit dir chatten, Bilder, PDFs und Audiodateien verstehen. "
+        "Sende mir einfach etwas. Nutze /clear, um den Verlauf zu löschen."
     )
-    await bot.reply_to(message, escape(text), parse_mode="MarkdownV2")
+    await update.message.reply_text(escape(text), parse_mode=ParseMode.MARKDOWN_V2)
 
 
-async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
-    """Handle /gemini command using the flash model."""
-    if not await _check_authorized(message, bot):
+async def clear_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
         return
-    try:
-        m = message.text.strip().split(maxsplit=1)[1].strip()
-    except IndexError:
-        await bot.reply_to(
-            message,
-            escape("Please add what you want to say after /gemini."),
-            parse_mode="MarkdownV2",
-        )
-        return
-    urls = extract_urls(m)
-    prompt = remove_urls(m)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(bot, message, prompt or m, model_1, urls=urls)
+    context.user_data.clear()
+    await update.message.reply_text('History cleared.')
 
 
-async def youtube_command_handler(message: Message, bot: TeleBot) -> None:
-    """Handle /youtube command with a video URL and optional prompt."""
-    if not await _check_authorized(message, bot):
-        return
-    parts = message.text.strip().split(maxsplit=2)
-    if len(parts) < 2 or not YOUTUBE_RE.search(parts[1]):
-        await bot.reply_to(
-            message,
-            escape("Please provide a valid YouTube URL after /youtube."),
-            parse_mode="MarkdownV2",
-        )
+async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
         return
 
-    url = parts[1]
-    if len(parts) == 2:
-        pending_youtube[message.from_user.id] = url
-        await bot.reply_to(message, "What would you like to do with this video?")
-        return
+    message_text = update.message.text.strip()
 
-    caption = parts[2].strip()
-    urls = extract_urls(caption)
-    prompt = remove_urls(caption)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_youtube_stream(
-        bot,
-        message,
-        url,
-        prompt,
-        model_1,
-        urls=urls,
-    )
+    pending_url = context.user_data.pop('pending_youtube', None)
+    youtube_match = YOUTUBE_RE.search(message_text)
 
-
-
-async def clear(message: Message, bot: TeleBot) -> None:
-    """Clear conversation history for the user."""
-    if not await _check_authorized(message, bot):
-        return
-    gemini.chat_manager.sessions.pop(str(message.from_user.id), None)
-    await bot.reply_to(message, "Your history has been cleared")
-
-
-async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
-    """Handle plain text messages in private chats."""
-    if not await _check_authorized(message, bot):
-        return
-    m = message.text.strip()
-
-    # If user previously sent a YouTube link without a prompt
-    if message.from_user.id in pending_youtube and not YOUTUBE_RE.search(m):
-        url = pending_youtube.pop(message.from_user.id)
-        urls = extract_urls(m)
-        prompt = remove_urls(m)
-        await bot.send_chat_action(message.chat.id, "typing")
-        await gemini.gemini_youtube_stream(
-            bot,
-            message,
-            url,
-            prompt or m,
-            model_1,
-            urls=urls,
-        )
-        return
-
-    # Message contains a YouTube link
-    match = YOUTUBE_RE.search(m)
-    if match:
-        url = match.group(0)
-        caption = (m[:match.start()] + m[match.end():]).strip()
+    if pending_url and not youtube_match:
+        url = pending_url
+        prompt = _remove_urls(message_text)
+        history = context.user_data.get('history', [])
+        response, new_history = await gemini.generate_from_youtube(url, prompt or message_text, history)
+        context.user_data['history'] = new_history
+    elif youtube_match:
+        url = youtube_match.group(0)
+        caption = (message_text[:youtube_match.start()] + message_text[youtube_match.end():]).strip()
         if not caption:
-            pending_youtube[message.from_user.id] = url
-            await bot.reply_to(message, "What would you like to do with this video?")
+            context.user_data['pending_youtube'] = url
+            await update.message.reply_text('Was soll ich mit diesem Video tun?')
             return
-        urls = extract_urls(caption)
-        prompt = remove_urls(caption)
-        await bot.send_chat_action(message.chat.id, "typing")
-        await gemini.gemini_youtube_stream(
-            bot,
-            message,
-            url,
-            prompt,
-            model_1,
-            urls=urls,
-        )
+        prompt = _remove_urls(caption)
+        history = context.user_data.get('history', [])
+        response, new_history = await gemini.generate_from_youtube(url, prompt, history)
+        context.user_data['history'] = new_history
+    else:
+        prompt = _remove_urls(message_text)
+        history = context.user_data.get('history', [])
+        response, new_history = await gemini.generate_response(prompt or message_text, history)
+        context.user_data['history'] = new_history
+
+    for part in _split_text(escape(response)):
+        await update.message.reply_text(part, parse_mode=ParseMode.MARKDOWN_V2)
+
+
+async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
         return
 
-    # Regular text
-    urls = extract_urls(m)
-    prompt = remove_urls(m)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(bot, message, prompt or m, model_1, urls=urls)
+    file = None
+    mime_type = 'image/jpeg'
+    if update.message.photo:
+        file = await update.message.photo[-1].get_file()
+        mime_type = 'image/jpeg'
+    elif update.message.document and update.message.document.mime_type and update.message.document.mime_type.startswith('image/'):
+        file = await update.message.document.get_file()
+        mime_type = update.message.document.mime_type
+    if not file:
+        return
+    image_bytes = await file.download_as_bytearray()
+    caption = update.message.caption.strip() if update.message.caption else 'Beschreibe dieses Bild.'
+    history = context.user_data.get('history', [])
+    response, new_history = await gemini.generate_from_image(bytes(image_bytes), mime_type, caption, history)
+    context.user_data['history'] = new_history
+    for part in _split_text(escape(response)):
+        await update.message.reply_text(part, parse_mode=ParseMode.MARKDOWN_V2)
 
 
-async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
-    """Handle image messages and caption prompts."""
-    if not await _check_authorized(message, bot):
+async def pdf_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
+        return
+    if not update.message.document or update.message.document.mime_type != 'application/pdf':
+        return
+    file = await update.message.document.get_file()
+    pdf_bytes = await file.download_as_bytearray()
+    caption = update.message.caption.strip() if update.message.caption else 'Fasse dieses Dokument zusammen.'
+    history = context.user_data.get('history', [])
+    response, new_history = await gemini.generate_from_pdf(bytes(pdf_bytes), caption, history)
+    context.user_data['history'] = new_history
+    for part in _split_text(escape(response)):
+        await update.message.reply_text(part, parse_mode=ParseMode.MARKDOWN_V2)
+
+
+async def audio_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id not in settings.authorized_user_ids:
+        await update.message.reply_text('❌ Access denied')
         return
 
-    file_id: str | None = None
-    mime_type = "image/jpeg"
-
-    if message.content_type == "photo":
-        file_id = message.photo[-1].file_id
-        mime_type = "image/jpeg"
-    elif message.content_type == "document" and message.document.mime_type and message.document.mime_type.startswith("image/"):
-        file_id = message.document.file_id
-        mime_type = message.document.mime_type
-
-    if not file_id:
-        return
-
-    try:
-        file = await bot.get_file(file_id)
-        image_bytes = await bot.download_file(file.file_path)
-    except Exception as exc:  # pragma: no cover - network issues
-        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
-        return
-
-    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    caption = message.caption.strip() if message.caption else "Describe this image."
-    urls = extract_urls(caption)
-    prompt = remove_urls(caption)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(
-        bot,
-        message,
-        [image_part, prompt or caption],
-        model_1,
-        urls=urls,
-    )
-
-
-async def gemini_pdf_handler(message: Message, bot: TeleBot) -> None:
-    """Handle PDF documents with an optional caption prompt."""
-    if not await _check_authorized(message, bot):
-        return
-
-    if not message.document or message.document.mime_type != "application/pdf":
-        return
-
-    try:
-        file = await bot.get_file(message.document.file_id)
-        pdf_bytes = await bot.download_file(file.file_path)
-    except Exception as exc:  # pragma: no cover - network issues
-        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
-        return
-
-    caption = message.caption.strip() if message.caption else "Summarize this document"
-    urls = extract_urls(caption)
-    prompt = remove_urls(caption)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_pdf_stream(
-        bot,
-        message,
-        pdf_bytes,
-        prompt,
-        model_1,
-        urls=urls,
-    )
-
-
-async def gemini_audio_handler(message: Message, bot: TeleBot) -> None:
-    """Handle audio or voice messages."""
-    if not await _check_authorized(message, bot):
-        return
-
+    file = None
     mime_type = None
-    file_id = None
-    if message.content_type == "voice" and message.voice:
-        file_id = message.voice.file_id
-        mime_type = "audio/ogg"
-    elif message.content_type == "audio" and message.audio:
-        file_id = message.audio.file_id
-        mime_type = message.audio.mime_type or "audio/mpeg"
-    elif (
-        message.content_type == "document"
-        and message.document.mime_type
-        and message.document.mime_type.startswith("audio/")
-    ):
-        file_id = message.document.file_id
-        mime_type = message.document.mime_type
-
-    if not file_id or not mime_type:
+    if update.message.voice:
+        file = await update.message.voice.get_file()
+        mime_type = 'audio/ogg'
+    elif update.message.audio:
+        file = await update.message.audio.get_file()
+        mime_type = update.message.audio.mime_type or 'audio/mpeg'
+    elif update.message.document and update.message.document.mime_type and update.message.document.mime_type.startswith('audio/'):
+        file = await update.message.document.get_file()
+        mime_type = update.message.document.mime_type
+    if not file or not mime_type:
         return
+    audio_bytes = await file.download_as_bytearray()
+    caption = update.message.caption.strip() if update.message.caption else 'Beschreibe dieses Audio.'
+    history = context.user_data.get('history', [])
+    response, new_history = await gemini.generate_from_audio(bytes(audio_bytes), mime_type, caption, history)
+    context.user_data['history'] = new_history
+    for part in _split_text(escape(response)):
+        await update.message.reply_text(part, parse_mode=ParseMode.MARKDOWN_V2)
 
-    try:
-        file = await bot.get_file(file_id)
-        audio_bytes = await bot.download_file(file.file_path)
-    except Exception as exc:  # pragma: no cover - network issues
-        await bot.reply_to(message, f"{error_info}\nError details: {exc}")
-        return
 
-    caption = message.caption.strip() if message.caption else "Describe this audio clip"
-    urls = extract_urls(caption)
-    prompt = remove_urls(caption)
-    await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_audio_stream(
-        bot,
-        message,
-        audio_bytes,
-        mime_type,
-        prompt,
-        model_1,
-        urls=urls,
-    )
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error("Exception while handling an update:", exc_info=context.error)
+    if isinstance(update, Update) and update.message:
+        await update.message.reply_text('Ein Fehler ist aufgetreten.')
