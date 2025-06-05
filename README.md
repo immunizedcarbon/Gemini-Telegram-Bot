@@ -28,6 +28,7 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
 - PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
 - Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
+- Webseiten-Inhalte analysieren: Enthält ein Prompt Links, werden diese über das URL-Context-Tool geladen.
 - Web-Suche über Google für aktuelle Informationen (sofern Tools aktiviert)
 - Nutzbar in privaten Chats oder Gruppen
 - Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
@@ -224,6 +225,7 @@ Frage in der Caption stellen.
 YouTube-Links funktionieren ähnlich: Link schicken und die Frage entweder
 nachträglich oder gemeinsam mit dem Link stellen. Der Befehl `/youtube` ist
 weiterhin nutzbar, erscheint aber nicht im Menü.
+- Enthält eine Nachricht weitere Links, analysiert der Bot deren Inhalte automatisch und nutzt sie als Kontext.
 
 ### Hinweis zur Textformatierung
 

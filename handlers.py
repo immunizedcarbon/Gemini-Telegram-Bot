@@ -5,6 +5,7 @@ from telebot.types import Message
 from google.genai import types
 import re
 from md2tgmd import escape
+from utils import extract_urls, remove_urls
 
 import gemini
 from config import conf
@@ -54,8 +55,10 @@ async def gemini_stream_handler(message: Message, bot: TeleBot) -> None:
             parse_mode="MarkdownV2",
         )
         return
+    urls = extract_urls(m)
+    prompt = remove_urls(m)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(bot, message, m, model_1)
+    await gemini.gemini_stream(bot, message, prompt or m, model_1, urls=urls)
 
 
 async def youtube_command_handler(message: Message, bot: TeleBot) -> None:
@@ -77,9 +80,18 @@ async def youtube_command_handler(message: Message, bot: TeleBot) -> None:
         await bot.reply_to(message, "What would you like to do with this video?")
         return
 
-    prompt = parts[2].strip()
+    caption = parts[2].strip()
+    urls = extract_urls(caption)
+    prompt = remove_urls(caption)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_youtube_stream(bot, message, url, prompt, model_1)
+    await gemini.gemini_youtube_stream(
+        bot,
+        message,
+        url,
+        prompt,
+        model_1,
+        urls=urls,
+    )
 
 
 
@@ -100,26 +112,46 @@ async def gemini_private_handler(message: Message, bot: TeleBot) -> None:
     # If user previously sent a YouTube link without a prompt
     if message.from_user.id in pending_youtube and not YOUTUBE_RE.search(m):
         url = pending_youtube.pop(message.from_user.id)
+        urls = extract_urls(m)
+        prompt = remove_urls(m)
         await bot.send_chat_action(message.chat.id, "typing")
-        await gemini.gemini_youtube_stream(bot, message, url, m, model_1)
+        await gemini.gemini_youtube_stream(
+            bot,
+            message,
+            url,
+            prompt or m,
+            model_1,
+            urls=urls,
+        )
         return
 
     # Message contains a YouTube link
     match = YOUTUBE_RE.search(m)
     if match:
         url = match.group(0)
-        prompt = (m[:match.start()] + m[match.end():]).strip()
-        if not prompt:
+        caption = (m[:match.start()] + m[match.end():]).strip()
+        if not caption:
             pending_youtube[message.from_user.id] = url
             await bot.reply_to(message, "What would you like to do with this video?")
             return
+        urls = extract_urls(caption)
+        prompt = remove_urls(caption)
         await bot.send_chat_action(message.chat.id, "typing")
-        await gemini.gemini_youtube_stream(bot, message, url, prompt, model_1)
+        await gemini.gemini_youtube_stream(
+            bot,
+            message,
+            url,
+            prompt,
+            model_1,
+            urls=urls,
+        )
         return
 
     # Regular text
+    urls = extract_urls(m)
+    prompt = remove_urls(m)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(bot, message, m, model_1)
+    await gemini.gemini_stream(bot, message, prompt or m, model_1, urls=urls)
 
 
 async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
@@ -148,9 +180,17 @@ async def gemini_image_handler(message: Message, bot: TeleBot) -> None:
         return
 
     image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    prompt = message.caption.strip() if message.caption else "Describe this image."
+    caption = message.caption.strip() if message.caption else "Describe this image."
+    urls = extract_urls(caption)
+    prompt = remove_urls(caption)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_stream(bot, message, [image_part, prompt], model_1)
+    await gemini.gemini_stream(
+        bot,
+        message,
+        [image_part, prompt or caption],
+        model_1,
+        urls=urls,
+    )
 
 
 async def gemini_pdf_handler(message: Message, bot: TeleBot) -> None:
@@ -168,9 +208,18 @@ async def gemini_pdf_handler(message: Message, bot: TeleBot) -> None:
         await bot.reply_to(message, f"{error_info}\nError details: {exc}")
         return
 
-    prompt = message.caption.strip() if message.caption else "Summarize this document"
+    caption = message.caption.strip() if message.caption else "Summarize this document"
+    urls = extract_urls(caption)
+    prompt = remove_urls(caption)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_pdf_stream(bot, message, pdf_bytes, prompt, model_1)
+    await gemini.gemini_pdf_stream(
+        bot,
+        message,
+        pdf_bytes,
+        prompt,
+        model_1,
+        urls=urls,
+    )
 
 
 async def gemini_audio_handler(message: Message, bot: TeleBot) -> None:
@@ -204,6 +253,16 @@ async def gemini_audio_handler(message: Message, bot: TeleBot) -> None:
         await bot.reply_to(message, f"{error_info}\nError details: {exc}")
         return
 
-    prompt = message.caption.strip() if message.caption else "Describe this audio clip"
+    caption = message.caption.strip() if message.caption else "Describe this audio clip"
+    urls = extract_urls(caption)
+    prompt = remove_urls(caption)
     await bot.send_chat_action(message.chat.id, "typing")
-    await gemini.gemini_audio_stream(bot, message, audio_bytes, mime_type, prompt, model_1)
+    await gemini.gemini_audio_stream(
+        bot,
+        message,
+        audio_bytes,
+        mime_type,
+        prompt,
+        model_1,
+        urls=urls,
+    )
