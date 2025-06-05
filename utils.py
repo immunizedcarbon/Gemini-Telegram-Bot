@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from telebot import TeleBot
 from telebot.types import Message
 from md2tgmd import escape
@@ -27,6 +28,19 @@ def split_text(text: str, max_length: int = MAX_MESSAGE_LENGTH) -> list[str]:
 
 
 logger = logging.getLogger(__name__)
+
+
+URL_RE = re.compile(r"https?://[^\s]+")
+
+
+def extract_urls(text: str) -> list[str]:
+    """Return a list of URLs found in ``text``."""
+    return URL_RE.findall(text)
+
+
+def remove_urls(text: str) -> str:
+    """Return ``text`` with any URLs removed."""
+    return URL_RE.sub("", text).strip()
 
 
 async def safe_edit(

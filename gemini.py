@@ -162,6 +162,7 @@ async def gemini_stream(
     message: Message,
     query: object,
     model_type: str,
+    urls: list[str] | None = None,
 ) -> None:
     """Stream a chat response from Gemini.
 
@@ -206,7 +207,14 @@ async def gemini_stream(
             )
             return
 
-        response = await chat.send_message_stream(query)
+        send_config = None
+        if urls:
+            tools = []
+            if conf.enable_tools:
+                tools.append(search_tool)
+            tools.append({"url_context": {"urls": urls}})
+            send_config = types.GenerateContentConfig(tools=tools)
+        response = await chat.send_message_stream(query, config=send_config)
 
         full_response = ""
         last_update = time.monotonic()
@@ -302,13 +310,20 @@ async def gemini_youtube_stream(
     youtube_url: str,
     prompt: str,
     model_type: str,
+    urls: list[str] | None = None,
 ) -> None:
     """Stream a response based on the provided YouTube video and prompt."""
 
     video_part = types.Part(
         file_data=types.FileData(file_uri=youtube_url)
     )
-    await gemini_stream(bot, message, [video_part, prompt], model_type)
+    await gemini_stream(
+        bot,
+        message,
+        [video_part, prompt],
+        model_type,
+        urls=urls,
+    )
 
 
 async def gemini_pdf_stream(
@@ -317,6 +332,7 @@ async def gemini_pdf_stream(
     pdf_bytes: bytes,
     prompt: str,
     model_type: str,
+    urls: list[str] | None = None,
 ) -> None:
     """Stream a response based on a PDF file and prompt."""
 
@@ -324,7 +340,7 @@ async def gemini_pdf_stream(
         data=pdf_bytes,
         mime_type="application/pdf",
     )
-    await gemini_stream(bot, message, [pdf_part, prompt], model_type)
+    await gemini_stream(bot, message, [pdf_part, prompt], model_type, urls=urls)
 
 
 async def gemini_audio_stream(
@@ -334,6 +350,7 @@ async def gemini_audio_stream(
     mime_type: str,
     prompt: str,
     model_type: str,
+    urls: list[str] | None = None,
 ) -> None:
     """Stream a response based on an audio clip and prompt."""
 
@@ -341,4 +358,4 @@ async def gemini_audio_stream(
         data=audio_bytes,
         mime_type=mime_type,
     )
-    await gemini_stream(bot, message, [prompt, audio_part], model_type)
+    await gemini_stream(bot, message, [prompt, audio_part], model_type, urls=urls)
