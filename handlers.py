@@ -5,7 +5,6 @@ from telebot.types import Message
 from google.genai import types
 import re
 from md2tgmd import escape
-import json
 
 import gemini
 from config import conf

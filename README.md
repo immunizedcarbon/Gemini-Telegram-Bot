@@ -20,6 +20,9 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 - Chat‑Modell: `gemini-2.5-flash-preview-05-20` (via `GEMINI_MODEL` anpassbar)
 - Streaming‑Antworten für schnelle Rückmeldungen
 - Mehrere Nachrichten pro Unterhaltung
+- Längere Antworten werden bei Bedarf automatisch in mehrere Nachrichten à
+  höchstens 4096 Zeichen aufgeteilt, da Telegram keine längeren Nachrichten
+  akzeptiert
 - Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
   neu gestartet wird
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
