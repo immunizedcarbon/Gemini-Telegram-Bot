@@ -1,4 +1,4 @@
-FROM python:3.12.10-slim
+FROM python:3.12-slim
 
 # Avoid writing .pyc files and enable unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -8,19 +8,15 @@ WORKDIR /app
 
 # Install Python dependencies first for better caching
 COPY requirements.txt ./
-RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd --create-home bot
+# Create non-root user and transfer ownership
+RUN useradd --create-home bot && chown -R bot:bot /app
 USER bot
 
-# Environment variables for runtime configuration
-ENV TELEGRAM_BOT_API_KEY="" \
-    GEMINI_API_KEY="" \
-    GEMINI_MODEL="gemini-2.5-flash-preview-05-20"
-
+# Environment variables will be managed by pydantic-settings
+# The CMD will be updated later when main.py is refactored
 CMD ["python", "main.py"]

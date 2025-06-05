@@ -1,68 +1,44 @@
-"""Application configuration and Gemini safety settings."""
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, HttpUrl, SecretStr
+from typing import Set, Optional
+from google.generai import types
 
-from dataclasses import dataclass, field
-import os
-from google.genai import types
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
 
+    # Telegram Configuration
+    telegram_bot_api_key: SecretStr
+    authorized_user_ids: Set[int]
 
-@dataclass(frozen=True)
-class BotConfig:
-    """Immutable container for runtime configuration."""
+    # Gemini API Configuration
+    gemini_api_key: SecretStr
+    gemini_model: str = 'gemini-1.5-flash-latest'
+    gemini_rpm_limit: int = 10
+    gemini_tpm_limit: int = 250000
 
-    error_info: str = (
-        "⚠️⚠️⚠️\nSomething went wrong !\nPlease try to change your prompt or "
-        "contact the admin !"
-    )
-    before_generate_info: str = "🤖Generating🤖"
-    model_1: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-05-20")
+    # Bot Behavior
+    session_ttl: int = 0  # Lifetime of inactive sessions in seconds (0 = unlimited)
+    enable_tools: bool = True
+    system_instruction: Optional[str] = None
+    streaming_update_interval: float = 0.7
 
-    _raw_system_instruction = os.getenv("SYSTEM_INSTRUCTION")
-    system_instruction: str | None = (
-        _raw_system_instruction.replace("\\n", "\n")
-        if _raw_system_instruction
-        else None
-    )
-    streaming_update_interval: float = 0.5
-    # Lifetime of an inactive chat session in seconds. Set to 0 for unlimited
-    # lifetime. Sessions exist only while the bot process runs.
-    session_ttl: float = float(os.getenv("SESSION_TTL", 0.0))
-    # Comma separated list of allowed Telegram user IDs
-    authorized_user_ids: set[int] = field(default_factory=lambda: {
-        int(uid)
-        for uid in os.getenv("AUTHORIZED_USER_IDS", "").split(",")
-        if uid.strip().isdigit()
-    })
-    access_denied_info: str = "❌ Access denied"
-    gemini_rpm_limit: int = int(os.getenv("GEMINI_RPM_LIMIT", 10))
-    gemini_tpm_limit: int = int(os.getenv("GEMINI_TPM_LIMIT", 250000))
-    enable_tools: bool = os.getenv("ENABLE_TOOLS", "true").lower() not in {
-        "false",
-        "0",
-        "no",
-    }
+    # Persistence
+    persistence_file: str = 'bot_persistence.pickle'
 
+    # Safety Settings (example: allow configuring one level)
+    harm_block_threshold: str = Field("BLOCK_NONE", pattern=r'^(BLOCK_ONLY_HIGH|BLOCK_MEDIUM_AND_ABOVE|BLOCK_LOW_AND_ABOVE|BLOCK_NONE)$')
 
-conf = BotConfig()
+    @property
+    def gemini_safety_settings(self) -> list[types.SafetySetting]:
+        return [
+            types.SafetySetting(category=cat, threshold=self.harm_block_threshold)
+            for cat in [
+                'HARM_CATEGORY_HARASSMENT',
+                'HARM_CATEGORY_HATE_SPEECH',
+                'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                'HARM_CATEGORY_DANGEROUS_CONTENT',
+            ]
+        ]
 
-safety_settings = [
-    types.SafetySetting(
-        category="HARM_CATEGORY_HARASSMENT",
-        threshold="BLOCK_NONE",
-    ),
-    types.SafetySetting(
-        category="HARM_CATEGORY_HATE_SPEECH",
-        threshold="BLOCK_NONE",
-    ),
-    types.SafetySetting(
-        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        threshold="BLOCK_NONE",
-    ),
-    types.SafetySetting(
-        category="HARM_CATEGORY_DANGEROUS_CONTENT",
-        threshold="BLOCK_NONE",
-    ),
-    types.SafetySetting(
-        category="HARM_CATEGORY_CIVIC_INTEGRITY",
-        threshold="BLOCK_NONE",
-    ),
-]
+# Global settings instance to be imported by other modules
+settings = Settings()

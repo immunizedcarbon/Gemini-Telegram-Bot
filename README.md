@@ -1,8 +1,9 @@
 # Gemini Telegram Bot
 
 Ein einfach zu installierender Telegram‑Bot für den Raspberry Pi, der über die
-Google‑Gemini‑API Antworten generiert. Der Bot merkt sich pro Benutzer den
-Gesprächsverlauf und zeigt Antworten stückweise an.
+Google‑Gemini‑API Antworten generiert. Der Bot nutzt die Bibliothek
+[`python-telegram-bot`](https://docs.python-telegram-bot.org/) und speichert den
+Gesprächsverlauf dauerhaft in einer Pickle-Datei.
 ## Inhaltsverzeichnis
 
 - [Funktionen](#funktionen)
@@ -17,21 +18,20 @@ Gesprächsverlauf und zeigt Antworten stückweise an.
 
 ## Funktionen
 
-- Chat‑Modell: `gemini-2.5-flash-preview-05-20` (via `GEMINI_MODEL` anpassbar)
+- Chat‑Modell: `gemini-1.5-flash-latest` (über `GEMINI_MODEL` anpassbar)
 - Streaming‑Antworten für schnelle Rückmeldungen
 - Mehrere Nachrichten pro Unterhaltung
 - Längere Antworten werden bei Bedarf automatisch in mehrere Nachrichten à
   höchstens 4096 Zeichen aufgeteilt, da Telegram keine längeren Nachrichten
   akzeptiert
-- Verlauf bleibt gespeichert, bis `/clear` aufgerufen oder der Bot
-  neu gestartet wird
+- Verlauf bleibt dauerhaft erhalten (PicklePersistence) und kann mit `/clear`
+  gelöscht werden
 - Bilder verstehen: Fotos oder Bilddateien können mit oder ohne Bildunterschrift gesendet werden. Die Caption wird als Prompt genutzt und das Ergebnis als Antwort ausgegeben.
 - PDF-Dateien verstehen: Hochgeladene PDFs (bis 20 MB) lassen sich zusammenfassen oder durchsuchen. Eine optionale Beschriftung dient als Prompt.
 - Audiodateien verstehen: Sprach- oder Musikdateien können analysiert oder transkribiert werden. Auch hier kann eine Caption als Frage genutzt werden.
 - Webseiten-Inhalte analysieren: Enthält ein Prompt Links, werden diese über das URL-Context-Tool geladen.
 - Web-Suche über Google für aktuelle Informationen (sofern Tools aktiviert)
 - Nutzbar in privaten Chats oder Gruppen
-- Überwacht Tokenverbrauch und API-Limits, um Free-Tier-Fehler zu vermeiden
 
 ## Voraussetzungen
 
@@ -80,20 +80,15 @@ pip install -r requirements.txt
 ```env
 TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
 GEMINI_API_KEY=<DEIN_GEMINI_KEY>
-GEMINI_MODEL=gemini-2.5-flash-preview-05-20
 AUTHORIZED_USER_IDS=12345,67890
-# Optional limits for the free tier (defaults passend zum Modell)
-GEMINI_RPM_LIMIT=10
-GEMINI_TPM_LIMIT=250000
-# Lifetime of inactive sessions in seconds (0 = unlimited)
-SESSION_TTL=0
-# Set to false if the chosen model does not support tools
+# Optional: Verhalten anpassen
 ENABLE_TOOLS=true
-# SYSTEM_INSTRUCTION ist optional. Mehrzeilige Texte mit \n trennen.
 SYSTEM_INSTRUCTION="DU BIST DIE KI\\n1. ..."
+# Optionales Safety-Level (BLOCK_ONLY_HIGH, BLOCK_MEDIUM_AND_ABOVE, BLOCK_LOW_AND_ABOVE, BLOCK_NONE)
+HARM_BLOCK_THRESHOLD=BLOCK_NONE
 ```
 
-`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` legt die Systemvorgaben fest und kann weggelassen werden. Mehrzeilige Texte werden mit `\n` getrennt. Das Modell kann jederzeit durch Anpassen von `GEMINI_MODEL` geändert werden. Speichern und die Datei schließen. `ENABLE_TOOLS` aktiviert die Google-Suche und sollte auf `false` gesetzt werden, wenn das genutzte Modell keine Tools unterstützt.
+`AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs, die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` legt die Systemvorgaben fest und kann weggelassen werden. Mehrzeilige Texte werden mit `\n` getrennt. `ENABLE_TOOLS` aktiviert die Google-Suche und sollte auf `false` gesetzt werden, wenn das genutzte Modell keine Tools unterstützt.
 
 ### Sicherheitseinstellungen
 
@@ -162,16 +157,14 @@ Mit Docker lässt sich der Bot ohne weitere Abhängigkeiten ausführen.
    Lege eine Datei `.env` im Projektordner an und trage dort die
    Zugangsdaten und optionalen Einstellungen ein:
 
-   ```env
-   TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
-   GEMINI_API_KEY=<DEIN_GEMINI_KEY>
-   GEMINI_MODEL=gemini-2.5-flash-preview-05-20
-   AUTHORIZED_USER_IDS=12345,67890
-   # optional
-   SESSION_TTL=0
-   ENABLE_TOOLS=true
-   SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
-   ```
+  ```env
+  TELEGRAM_BOT_API_KEY=<DEIN_TELEGRAM_TOKEN>
+  GEMINI_API_KEY=<DEIN_GEMINI_KEY>
+  AUTHORIZED_USER_IDS=12345,67890
+  ENABLE_TOOLS=true
+  SYSTEM_INSTRUCTION="DU BIST DIE KI\n1. ..."
+  HARM_BLOCK_THRESHOLD=BLOCK_NONE
+  ```
 
 `AUTHORIZED_USER_IDS` ist eine kommaseparierte Liste der Telegram-IDs,
   die den Bot nutzen dürfen. `SYSTEM_INSTRUCTION` kann weggelassen werden.
