@@ -37,9 +37,11 @@ class ChatManager:
             return session.chat
 
         client = _ensure_client()
+        tools = [search_tool] if conf.enable_tools else None
         chat = client.aio.chats.create(
             model=model,
             config=types.GenerateContentConfig(
+                tools=tools,
                 system_instruction=conf.system_instruction,
                 safety_settings=safety_settings,
             ),
@@ -96,6 +98,7 @@ chat_manager = ChatManager(conf.session_ttl)
 model_1 = conf.model_1
 error_info = conf.error_info
 before_generate_info = conf.before_generate_info
+search_tool = {"google_search": {}}
 
 logger = logging.getLogger(__name__)
 
