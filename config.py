@@ -35,12 +35,6 @@ class BotConfig:
     access_denied_info: str = "❌ Access denied"
     gemini_rpm_limit: int = int(os.getenv("GEMINI_RPM_LIMIT", 10))
     gemini_tpm_limit: int = int(os.getenv("GEMINI_TPM_LIMIT", 250000))
-    dip_api_key: str | None = os.getenv("DIP_API_KEY")
-    enable_tools: bool = os.getenv("ENABLE_TOOLS", "true").lower() not in {
-        "false",
-        "0",
-        "no",
-    }
 
 
 conf = BotConfig()

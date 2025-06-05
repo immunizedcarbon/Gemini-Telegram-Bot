@@ -14,7 +14,6 @@ from google import genai
 from google.genai import chats, types
 
 from config import conf, safety_settings
-import bundestag
 from utils import safe_edit, split_text, MAX_MESSAGE_LENGTH
 from md2tgmd import escape
 
@@ -38,11 +37,9 @@ class ChatManager:
             return session.chat
 
         client = _ensure_client()
-        tools = [search_tool, *bundestag_tools] if conf.enable_tools else None
         chat = client.aio.chats.create(
             model=model,
             config=types.GenerateContentConfig(
-                tools=tools,
                 system_instruction=conf.system_instruction,
                 safety_settings=safety_settings,
             ),
@@ -99,9 +96,6 @@ chat_manager = ChatManager(conf.session_ttl)
 model_1 = conf.model_1
 error_info = conf.error_info
 before_generate_info = conf.before_generate_info
-
-search_tool = {"google_search": {}}
-bundestag_tools = [bundestag.dip_fetch, bundestag.dip_search]
 
 logger = logging.getLogger(__name__)
 
